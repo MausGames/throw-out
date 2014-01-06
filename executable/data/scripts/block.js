@@ -188,46 +188,52 @@ cBlock.s_sVertexShader =
 "    v_v3Normal     = u_m3Normal * a_v3Normal;"                       +
 "    v_v3NormalTrue = a_v3Normal;"                                    +
 ""                                                                    +
-"    gl_Position  = u_m4ModelViewProj * vec4(a_v3Position, 1.0);"     +
+"    gl_Position = u_m4ModelViewProj * vec4(a_v3Position, 1.0);"      +
 "}";
 
 cBlock.s_sFragmentShader =
-"precision mediump float;"                                                                                   +
-"precision lowp    int;"                                                                                     +
-""                                                                                                           +
-"uniform vec4 u_v4Color;"                                                                                    +
-"uniform int  u_iType;"                                                                                      +
-"varying vec3 v_v3Relative;"                                                                                 +
-"varying vec3 v_v3Normal;"                                                                                   +
-"varying vec3 v_v3NormalTrue;"                                                                               +
-""                                                                                                           +
-"void main()"                                                                                                +
-"{"                                                                                                          +
-"    const vec3 v3Camera = vec3(0.0, 0.447213650, -0.894427299);"                                            +
-"    const vec3 v3Light =  vec3(0.0,         0.0,          1.0);"                                            +
-""                                                                                                           +
-"    float fIntensity = 40.0 / length(v_v3Relative);"                                                        +
-"    fIntensity      *= dot(normalize(v_v3Relative), v3Camera);"                                             +
-"    fIntensity       = (fIntensity + 0.25)*1.1;"                                                            +
-""                                                                                                           +
-"    fIntensity *= dot(normalize(v_v3Normal), v3Light)*0.5+0.5;"                                             +
-"    fIntensity  = min(fIntensity, 1.8);"                                                                    +
-""                                                                                                           +
-"         if(u_iType == 1) {if(v_v3NormalTrue.z > 0.99) fIntensity *= 0.2;}"                                 +
-"    else if(u_iType == 2) {if(v_v3NormalTrue.z > 0.92 && abs(v_v3NormalTrue.y) < 0.05) fIntensity *= 0.2;}" +
-""                                                                                                           +
-"    gl_FragColor = vec4(u_v4Color.rgb*fIntensity, u_v4Color.a);"                                            +
+"precision mediump float;"                                                                                  +
+"precision lowp    int;"                                                                                    +
+""                                                                                                          +
+"uniform vec4 u_v4Color;"                                                                                   +
+"uniform int  u_iType;"                                                                                     +
+"varying vec3 v_v3Relative;"                                                                                +
+"varying vec3 v_v3Normal;"                                                                                  +
+"varying vec3 v_v3NormalTrue;"                                                                              +
+""                                                                                                          +
+"void main()"                                                                                               +
+"{"                                                                                                         +
+"    const vec3 v3Camera = vec3(0.0, 0.447213650, -0.894427299);"                                           +
+"    const vec3 v3Light  = vec3(0.0,         0.0,          1.0);"                                           +
+""                                                                                                          +
+"    float fIntensity = 40.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));"                               +
+"    fIntensity      *= dot(normalize(v_v3Relative), v3Camera);"                                            +
+"    fIntensity       = (fIntensity + 0.25)*1.1;"                                                           +
+""                                                                                                          +
+"    fIntensity *= dot(normalize(v_v3Normal), v3Light)*0.5+0.5;"                                            +
+"    fIntensity  = min(fIntensity, 1.8);"                                                                   +
+""                                                                                                          +
+"    if(u_iType != 0)"                                                                                      +
+"    {"                                                                                                     +
+"        if(u_iType == 1) {if(v_v3NormalTrue.z > 0.99)                                 fIntensity *= 0.2;}" +
+"                    else {if(v_v3NormalTrue.z > 0.92 && abs(v_v3NormalTrue.y) < 0.05) fIntensity *= 0.2;}" +
+"    }"                                                                                                     +
+""                                                                                                          +
+"    gl_FragColor = vec4(u_v4Color.rgb*fIntensity, u_v4Color.a);"                                           +
 "}";
 
 var C_BLOCK_SIZE     = 1.3;
-var C_BLOCK_BALL_OFF = C_BALL_SIZE+C_BLOCK_SIZE;
+var C_BLOCK_BALL_OFF = C_BLOCK_SIZE+C_BALL_SIZE;
 
 
 // ****************************************************************
-cBlock.s_pModel       = null;
-cBlock.s_pShader      = null;
+cBlock.s_pModel  = null;
+cBlock.s_pShader = null;
+
+// own uniform location
 cBlock.s_iUniformType = -1;
 
+// saved uniform values
 cBlock.s_mSaveNormal = mat3.create();
 cBlock.s_vSaveColor  = vec4.create();
 cBlock.s_iSaveType   = 0;
@@ -236,12 +242,12 @@ cBlock.s_iSaveType   = 0;
 // ****************************************************************
 cBlock.Init = function(bHigh)
 {
-    // clear old model
+    // define model
     if(cBlock.s_pModel !== null) cBlock.s_pModel.Clear();
-
-    // define model and shader-program
     if(bHigh) cBlock.s_pModel  = new cModel(cBlock.s_afVertexData,    cBlock.s_aiIndexData);
          else cBlock.s_pModel  = new cModel(cBlock.s_afVertexDataLow, cBlock.s_aiIndexDataLow);
+
+    // define shader-program
     if(cBlock.s_pShader === null)
     {
         cBlock.s_pShader = new cShader(cBlock.s_sVertexShader, cBlock.s_sFragmentShader);
@@ -251,6 +257,15 @@ cBlock.Init = function(bHigh)
     // force update
     cBlock.s_mSaveNormal[8] = -1.0;
     cBlock.s_vSaveColor[3]  = -1.0;
+};
+
+
+// ****************************************************************
+cBlock.Exit = function()
+{
+    // clear model and shader-program
+    cBlock.s_pModel.Clear();
+    cBlock.s_pShader.Clear();
 };
 
 
@@ -269,38 +284,31 @@ function cBlock()
     this.m_vFlyAxis   = vec3.create();
     this.m_fFlyTime   = 0.0;
 
-    this.m_bActive    = true;
-
-    // (!this.m_bActive)          ->  inactive for collisions, currently flying around
-    // (this.m_vColor[3] <= 0.0)  ->  completely inactive
+    this.m_bActive    = false;
+    this.m_bFlying    = true;
 }
 
 
 // ****************************************************************
 cBlock.prototype.Render = function()
 {
-    if(this.m_vColor[3] <= 0.0) return;
+    if(!this.m_bActive) return;
 
     // enable the shader-program
     cBlock.s_pShader.Enable();
 
-    // calculate model-view matrices
-    var mModelView = mat4.create();
-    mat4.mul(mModelView, g_mCamera, this.m_mTransform);
-
-    var mModelViewProj = mat4.create();
-    mat4.mul(mModelViewProj, g_mProjection, mModelView);
-
-    // update all object uniforms
-    GL.uniformMatrix4fv(cBlock.s_pShader.m_iUniformModelViewProj, false, mModelViewProj);
-    GL.uniformMatrix4fv(cBlock.s_pShader.m_iUniformModelView,     false, mModelView);
-
-    // check current values to reduce video brandwidth (at the cost of CPU)
+    // update model-view matrices
+    mat4.mul(g_mMatrix, g_mCamera, this.m_mTransform);
+    GL.uniformMatrix4fv(cBlock.s_pShader.m_iUniformModelView,     false, g_mMatrix);
+    mat4.mul(g_mMatrix, g_mProjection, g_mMatrix);
+    GL.uniformMatrix4fv(cBlock.s_pShader.m_iUniformModelViewProj, false, g_mMatrix);
+    
+    // check and update current values (check to reduce video brandwidth)
     if(!CompareArray(cBlock.s_mSaveNormal, this.m_mNormal, 9)) {mat3.copy(cBlock.s_mSaveNormal, this.m_mNormal); GL.uniformMatrix3fv(cBlock.s_pShader.m_iUniformNormal, false, this.m_mNormal);}
     if(!CompareArray(cBlock.s_vSaveColor,  this.m_vColor,  4)) {vec4.copy(cBlock.s_vSaveColor,  this.m_vColor);  GL.uniform4f(cBlock.s_pShader.m_iUniformColor,                this.m_vColor[0], this.m_vColor[1], this.m_vColor[2], this.m_vColor[3]);}
     if(cBlock.s_iSaveType !== this.m_iType)                    {cBlock.s_iSaveType = this.m_iType;               GL.uniform1i(cBlock.s_iUniformType,                           this.m_iType);}
     
-    // render the model
+    // render the model (# performance hotspot)
     cBlock.s_pModel.Render();
 };
 
@@ -308,48 +316,81 @@ cBlock.prototype.Render = function()
 // ****************************************************************
 cBlock.prototype.Move = function()
 {
-    if(this.m_vColor[3] <= 0.0) return;
+    if(!this.m_bActive) return;
 
-    if(!this.m_bActive)
+    if(this.m_bFlying)
     {
         // fly through the air
-        this.m_vPosition[0] += this.m_vFlyDir[0]*g_fTime;
-        this.m_vPosition[1] += this.m_vFlyDir[1]*g_fTime;
-        this.m_vPosition[2] += this.m_vFlyDir[2]*g_fTime;
+        this.m_vPosition[0] += this.m_vFlyDir[0]*g_fBlockTime;
+        this.m_vPosition[1] += this.m_vFlyDir[1]*g_fBlockTime;
+        this.m_vPosition[2] += this.m_vFlyDir[2]*g_fBlockTime;
 
         // reduce fly-speed and fly-angle
-        this.m_vFlyDir[0] *= 1.0-g_fTime*0.2;
-        this.m_vFlyDir[1] *= 1.0-g_fTime*0.2;
-        this.m_vFlyDir[2] -= 50.0*g_fTime;
+        var fFactor = 1.0-g_fBlockTime*0.2;
+        this.m_vFlyDir[0] *= fFactor;
+        this.m_vFlyDir[1] *= fFactor;
+        this.m_vFlyDir[2] -= 50.0*g_fBlockTime;
 
-        // current fly-time for rotation
-        this.m_fFlyTime += g_fTime*5.0;
+        // increae current fly-time for rotation
+        this.m_fFlyTime += g_fBlockTime*5.0;
 
         // fade out the object
         if(this.m_vPosition[2] < 0.0) this.m_vColor[3] = 1.0 + this.m_vPosition[2]*0.01;
+        if(this.m_vColor[3] <= 0.0) this.m_bActive = false;
+
+        // update transformation matrix
+        this.UpdateTransform();
+
+        // add rotation
+        mat4.identity(g_mMatrix);
+        mat4.rotate(g_mMatrix, g_mMatrix, this.m_fFlyTime, this.m_vFlyAxis);
+        mat4.mul(this.m_mTransform, this.m_mTransform, g_mMatrix);
+
+        // set normal matrix (only rotation inverted and transposed)
+        mat3.fromMat4(this.m_mNormal, g_mMatrix);
+        mat3.invert(this.m_mNormal, this.m_mNormal);
+        mat3.transpose(this.m_mNormal, this.m_mNormal);
     }
     else if(this.m_vPosition[2] > 1.0)
     {
         // glide down
-        this.m_vPosition[2] = Math.max(this.m_vPosition[2] - Math.min(this.m_vPosition[2]*g_fTime*4.0, 1.0), 1.0);
-    }
+        this.m_vPosition[2] = Math.max(this.m_vPosition[2] - Math.min((this.m_vPosition[2]-0.8)*4.0, 130.0)*g_fBlockTime, 1.0);
 
+        // update transformation matrix
+        this.UpdateTransform();
+    }
+};
+
+
+// ****************************************************************
+cBlock.prototype.UpdateTransform = function()
+{
     // update transformation matrix
     mat4.identity(this.m_mTransform);
     mat4.scale(this.m_mTransform, this.m_mTransform, [2.1, 2.1, 2.0]);
     mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
+};
 
-    if(!this.m_bActive)
-    {
-        var mRotation = mat4.create();
 
-        // add rotation
-        mat4.rotate(mRotation, mRotation, this.m_fFlyTime, this.m_vFlyAxis);
-        mat4.mul(this.m_mTransform, this.m_mTransform, mRotation);
+// ****************************************************************
+cBlock.prototype.Throw = function(vDirection)
+{
+    // set block flying
+    this.m_bFlying = true;
 
-        // set normal matrix (only rotation inverted and transposed)
-        mat3.fromMat4(this.m_mNormal, mRotation);
-        mat3.invert(this.m_mNormal, this.m_mNormal);
-        mat3.transpose(this.m_mNormal, this.m_mNormal);
-    }
+    // kick block away
+    this.m_vFlyDir[0] = vDirection[0]*70.0;
+    this.m_vFlyDir[1] = vDirection[1]*70.0;
+    this.m_vFlyDir[2] = 30.0;
+
+    // spin block randomly
+    vec3.random(this.m_vFlyAxis);
+};
+
+
+// ****************************************************************
+cBlock.prototype.Activate = function()
+{
+    this.m_bActive = true;
+    this.m_bFlying = false;
 };

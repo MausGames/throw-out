@@ -172,7 +172,6 @@ cBall.s_aiIndexData =
 cBall.s_sVertexShader =
 "attribute vec3 a_v3Position;"                                    +
 "uniform   mat4 u_m4ModelViewProj;"                               +
-"uniform   mat4 u_m4ModelView;"                                   +
 "varying   vec3 v_v3Relative;"                                    +
 ""                                                                +
 "void main()"                                                     +
@@ -184,16 +183,17 @@ cBall.s_sVertexShader =
 cBall.s_sFragmentShader =
 "precision mediump float;"                                              +
 ""                                                                      +
-"varying vec3 v_v3Relative;"                                            +
+"uniform float u_fAlpha;"                                               +
+"varying vec3  v_v3Relative;"                                           +
 ""                                                                      +
 "void main()"                                                           +
 "{"                                                                     +
 "    const vec3 v3Light = vec3(0.0, 0.0, 1.0);"                         +
 ""                                                                      +
 "    float fIntensity = dot(normalize(v_v3Relative), v3Light)*0.5+0.5;" +
-"    fIntensity       = (fIntensity + 0.0)*0.65;"                        +
+"    fIntensity       = (fIntensity + 0.0)*0.65;"                       +
 ""                                                                      +
-"    gl_FragColor = vec4(vec3(fIntensity), 1.0);"                       +
+"    gl_FragColor = vec4(vec3(fIntensity), u_fAlpha);"                  +
 "}";
 
 var C_BALL_SIZE  = 0.9;
@@ -203,6 +203,16 @@ var C_BALL_START = [0.0, -32.0];
 // ****************************************************************
 cBall.s_pModel  = null;
 cBall.s_pShader = null;
+
+// saved uniform values
+cBall.s_iSaveAlpha = 0.0;
+
+// pre-allocated function variables
+cBall.s_vPreOldPos       = vec2.create();
+cBall.s_vPreBlockBallOff = vec4.create();
+cBall.s_vPreDiff         = vec2.create();
+cBall.s_vPreBurst        = vec2.create();
+cBall.s_vPrePaddleSize   = vec2.create();
 
 
 // ****************************************************************
@@ -215,19 +225,25 @@ cBall.Init = function()
 
 
 // ****************************************************************
+cBall.Exit = function()
+{
+    // clear model and shader-program
+    cBall.s_pModel.Clear();
+    cBall.s_pShader.Clear();
+};
+
+
+// ****************************************************************
 function cBall()
 {
     // create attributes
-    this.m_vPosition  = vec3.create();
+    this.m_vPosition  = vec3.fromValues(0.0, 0.0, C_BALL_SIZE);
     this.m_vDirection = vec2.create();
     this.m_mTransform = mat4.create();
 
-    this.m_fSize      = 0.0;
-    this.m_fSpeed     = 35.0;
+    this.m_fAlpha     = 0.0;
+    this.m_fSpeed     = 0.0;   // extern set
     this.m_bActive    = false;
-
-    // set attributes
-    this.m_vPosition[2] = C_BALL_SIZE;
 }
 
 
@@ -239,16 +255,13 @@ cBall.prototype.Render = function()
     // enable the shader-program
     cBall.s_pShader.Enable();
 
-    // calculate model-view matrices
-    var mModelView = mat4.create();
-    mat4.mul(mModelView, g_mCamera, this.m_mTransform);
+    // update model-view matrices
+    mat4.mul(g_mMatrix, g_mCamera, this.m_mTransform);
+    mat4.mul(g_mMatrix, g_mProjection, g_mMatrix);
+    GL.uniformMatrix4fv(cBall.s_pShader.m_iUniformModelViewProj, false, g_mMatrix);
 
-    var mModelViewProj = mat4.create();
-    mat4.mul(mModelViewProj, g_mProjection, mModelView);
-
-    // update all object uniforms
-    GL.uniformMatrix4fv(cBall.s_pShader.m_iUniformModelViewProj, false, mModelViewProj);
-    GL.uniformMatrix4fv(cBall.s_pShader.m_iUniformModelView,     false, mModelView);
+    // check and update current alpha (check to reduce video brandwidth)
+    if(cBall.s_iSaveAlpha !== this.m_fAlpha) {cBall.s_iSaveAlpha = this.m_fAlpha; GL.uniform1f(cBall.s_pShader.m_iUniformAlpha, this.m_fAlpha);}
 
     // render the model
     cBall.s_pModel.Render();
@@ -259,172 +272,215 @@ cBall.prototype.Render = function()
 cBall.prototype.Move = function()
 {
     if(!this.m_bActive) return;
-    
-    var fTimeSpeed  = g_fTime*this.m_fSpeed;
-    var vOldPos     = vec2.clone(this.m_vPosition);
-    var vPaddleSize = vec2.create();
 
-    // precalculate ball-position with offset between block and ball
-    var vBlockBallOff = vec4.create();
-    vBlockBallOff[0] = this.m_vPosition[0]-C_BLOCK_BALL_OFF;
-    vBlockBallOff[1] = this.m_vPosition[0]+C_BLOCK_BALL_OFF;
-    vBlockBallOff[2] = this.m_vPosition[1]-C_BLOCK_BALL_OFF;
-    vBlockBallOff[3] = this.m_vPosition[1]+C_BLOCK_BALL_OFF;
+    var fTimeSpeed = g_fTime*this.m_fSpeed;
+    vec2.copy(cBall.s_vPreOldPos, this.m_vPosition);
 
     // move ball
     this.m_vPosition[0] += this.m_vDirection[0]*fTimeSpeed;
     this.m_vPosition[1] += this.m_vDirection[1]*fTimeSpeed;
 
-    // test collision with blocks and get nearest block
-    var iNum = -1;
-    var fDistance = 1000.0;
-    for(var i = 0; i < C_BLOCKS_ALL; ++i)
-    {
-        if(g_pBlock[i].m_vColor[3] <= 0.0) continue;
-        if(!g_pBlock[i].m_bActive) continue;
+    // get current plane distance (single value)
+    var fMaxPos = Clamp((60.0 - Math.max(Math.abs(this.m_vPosition[0]), Math.abs(this.m_vPosition[1])))*0.05, 0.0, 1.0);
 
-        // test collision (current position for the test, old position for direction calculations (better precision), ball as cube)
-        if(vBlockBallOff[0] < g_pBlock[i].m_vPosition[0] &&
-           vBlockBallOff[1] > g_pBlock[i].m_vPosition[0] &&
-           vBlockBallOff[2] < g_pBlock[i].m_vPosition[1] &&
-           vBlockBallOff[3] > g_pBlock[i].m_vPosition[1])
-        {
-            var fNewDistance = vec2.sqrDist(vOldPos, g_pBlock[i].m_vPosition);
-            if(fDistance > fNewDistance)
-            {
-                // get nearest block
-                iNum = i;
-                fDistance = fNewDistance;
-            }
-        }
+    // update alpha (fade-out during transition, otherwise fade-in)
+    this.m_fAlpha = Math.min(this.m_fAlpha + g_fTime*(InTransition() ? -3.0 : 3.0), 1.0) * fMaxPos;
+
+    // destroy on zero visibility (too far away from plane or fade-out after level was finished)
+    if(this.m_fAlpha <= 0.0)
+    {
+        this.m_bActive = false;
+        return;
     }
 
-    if(iNum >= 0)
+    // do not test collision on level transition
+    if(!InTransition())
     {
-        var iDir = 0;
-        
-        // calculate position-difference with old position
-        var vDiff = vec2.create();
-        vec2.sub(vDiff, vOldPos, g_pBlock[iNum].m_vPosition);
+        // pre-calculate ball-position with offset between block and ball
+        cBall.s_vPreBlockBallOff[0] = this.m_vPosition[0] - C_BLOCK_BALL_OFF;
+        cBall.s_vPreBlockBallOff[1] = this.m_vPosition[0] + C_BLOCK_BALL_OFF;
+        cBall.s_vPreBlockBallOff[2] = this.m_vPosition[1] - C_BLOCK_BALL_OFF;
+        cBall.s_vPreBlockBallOff[3] = this.m_vPosition[1] + C_BLOCK_BALL_OFF;
 
-        if(iNum >= C_BLOCKS_CEN)
+        // test collision with blocks and get nearest block
+        var iNum = -1;
+        var fDistance = 1000.0;
+        for(var i = 0; i < C_LEVEL_ALL; ++i)
         {
-            // reflect ball-direction from the border
-            iDir = (iNum >= C_BLOCKS_CEN+2*C_BLOCKS_X) ? 0 : 1;
-            vDiff[iDir] = Math.abs(vDiff[iDir]) * -Signf(vOldPos[iDir]);
-        }
-        else
-        {
-            // reflect ball-direction depending on the angle of the position-difference
-            if(Math.abs(vDiff[0]) > Math.abs(vDiff[1])) iDir = (Signf(vDiff[0]) === Signf(this.m_vDirection[0])) ? 1 : 0;
-                                                   else iDir = (Signf(vDiff[1]) === Signf(this.m_vDirection[1])) ? 0 : 1;
-        }
-        this.m_vDirection[iDir] = Math.abs(this.m_vDirection[iDir]) * Signf(vDiff[iDir]);
+            if(g_pBlock[i].m_bFlying) continue;
 
-        // set burst-direction to kick only blocks in an 180 degree area
-        var vBurst = vec2.create();
-        vBurst[iDir] = -Signf(vDiff[iDir]);
-
-        // move ball away from the block (vDiff not normalized)
-        this.m_vPosition[0] += vDiff[0]*g_fTime*3.0;
-        this.m_vPosition[1] += vDiff[1]*g_fTime*3.0;
-
-        // kick all near relevant blocks away
-        for(var j = 0; j < C_BLOCKS_ALL; ++j)
-        {
-            if(g_pBlock[j].m_vColor[3] <= 0.0) continue;
-            if(!g_pBlock[j].m_bActive) continue;
-
-            // calculate position-difference with current position
-            vec2.sub(vDiff, this.m_vPosition, g_pBlock[j].m_vPosition);
-
-            if(vec2.squaredLength(vDiff) < 70.0 && vec2.dot(vBurst, vDiff) < 0.0)
+            // test collision (current position for the test, old position for direction calculations (better precision), ball as cube)
+            if(cBall.s_vPreBlockBallOff[0] < g_pBlock[i].m_vPosition[0] &&
+               cBall.s_vPreBlockBallOff[1] > g_pBlock[i].m_vPosition[0] &&
+               cBall.s_vPreBlockBallOff[2] < g_pBlock[i].m_vPosition[1] &&
+               cBall.s_vPreBlockBallOff[3] > g_pBlock[i].m_vPosition[1])
             {
-                // set block inactive
-                g_pBlock[j].m_bActive = false;
-
-                // kick block away
-                vec2.normalize(vDiff, vDiff);
-                g_pBlock[j].m_vFlyDir[0] = -vDiff[0]*70.0;
-                g_pBlock[j].m_vFlyDir[1] = -vDiff[1]*70.0;
-                g_pBlock[j].m_vFlyDir[2] = 30.0;
-
-                // spin block randomly
-                vec3.random(g_pBlock[j].m_vFlyAxis);
-
-                // increase score
-                g_iScore += 5;
-
-                // handle typed blocks
-                if(g_pBlock[j].m_iType === 1) CreateBall(g_pBlock[j].m_vPosition, vDiff);
-                if(g_pBlock[j].m_iType === 2)
+                var fNewDistance = vec2.sqrDist(cBall.s_vPreOldPos, g_pBlock[i].m_vPosition);
+                if(fDistance > fNewDistance)
                 {
-                    for(var k = 0; k < 4; ++k)
-                        g_pPaddle[k].m_bShield = true;
+                    // get nearest block
+                    iNum = i;
+                    fDistance = fNewDistance;
                 }
             }
         }
-    }
 
-    // test collision with paddles
-    for(var i = 0; i < 4; ++i)
-    {
-        // naive but fast (direction is set on paddle creation, 0/bottom, 1/up, 2/left, 3/right)
-        var iX = (i < 2) ? 0 : 1;
-        var iY = (i < 2) ? 1 : 0;
-
-        if(g_pPaddle[i].m_bWall)
+        if(iNum >= 0)
         {
-            // simply reflect the ball from a wall-paddle
-                 if(i === 1 && this.m_vPosition[1]+C_BALL_SIZE > g_pPaddle[i].m_vPosition[1]+C_PADDLE_SIZE[iY]) this.m_vDirection[1] = -Math.abs(this.m_vDirection[1]);
-            else if(i === 2 && this.m_vPosition[0]-C_BALL_SIZE < g_pPaddle[i].m_vPosition[0]+C_PADDLE_SIZE[iX]) this.m_vDirection[0] =  Math.abs(this.m_vDirection[0]);
-            else if(i === 3 && this.m_vPosition[0]+C_BALL_SIZE > g_pPaddle[i].m_vPosition[0]-C_PADDLE_SIZE[iX])
+            var iDir = 0;
+
+            // calculate position-difference with old position
+            var vDiff = cBall.s_vPreDiff;
+            vec2.sub(vDiff, cBall.s_vPreOldPos, g_pBlock[iNum].m_vPosition);
+
+            if(iNum >= C_LEVEL_CENTER)
             {
-                this.m_vDirection[0] = -Math.abs(this.m_vDirection[0]);
-                if(Math.abs(this.m_vDirection[1]) < 0.1)
+                // reflect ball-direction from the border
+                iDir = (iNum >= C_LEVEL_CENTER+2*C_LEVEL_X) ? 0 : 1;
+                vDiff[iDir] = Math.abs(vDiff[iDir]) * -Signf(cBall.s_vPreOldPos[iDir]);
+            }
+            else
+            {
+                // reflect ball-direction depending on the angle of the position-difference
+                if(Math.abs(vDiff[0]) > Math.abs(vDiff[1])) iDir = (Signf(vDiff[0]) === Signf(this.m_vDirection[0])) ? 1 : 0;
+                                                       else iDir = (Signf(vDiff[1]) === Signf(this.m_vDirection[1])) ? 0 : 1;
+            }
+            this.m_vDirection[iDir] = Math.abs(this.m_vDirection[iDir]) * Signf(vDiff[iDir]);
+
+            // set burst-direction to kick only blocks in an 180 degree area
+            vec2.set(cBall.s_vPreBurst, 0.0, 0.0);
+            cBall.s_vPreBurst[iDir] = -Signf(vDiff[iDir]);
+
+            // move ball away from the block (vDiff not normalized)
+            var fTime = g_fTime*3.0;
+            this.m_vPosition[0] += vDiff[0]*fTime;
+            this.m_vPosition[1] += vDiff[1]*fTime;
+
+            // kick all near relevant blocks away
+            for(var j = 0; j < C_LEVEL_ALL; ++j)
+            {
+                if(g_pBlock[j].m_bFlying) continue;
+
+                // calculate position-difference with current position
+                vec2.sub(vDiff, this.m_vPosition, g_pBlock[j].m_vPosition);
+
+                if(vec2.squaredLength(vDiff) < 30.0 && vec2.dot(cBall.s_vPreBurst, vDiff) < 0.0)
                 {
-                    // prevent infinite ball
-                    this.m_vDirection[1] = 0.5;
+                    vec2.normalize(vDiff, vDiff);
+                    
+                    // increase score
+                    g_iScore += 5 * g_fStatMulti;
+
+                    // handle typed blocks
+                    if(g_pBlock[j].m_iType === 1)
+                    {
+                        // create new ball
+                        cBall.CreateBall(g_pBlock[j].m_vPosition, vDiff, false);
+                    }
+                    if(g_pBlock[j].m_iType === 2)
+                    {
+                        // make paddles longer
+                        for(var k = 0; k < 4; ++k)
+                            g_pPaddle[k].m_bShield = true;
+                    }
+
+                    // throw the block out
+                    vec2.negate(vDiff, vDiff);
+                    g_pBlock[j].Throw(vDiff);
+                }
+            }
+
+            // check for cleared level
+            var iNum = 0;
+            for(var j = 0; j < C_LEVEL_CENTER; ++j)
+            {
+                if(g_pBlock[j].m_bActive)
+                    ++iNum;
+            }
+            if(!iNum) NextLevel();
+        }
+
+        // test collision with paddles
+        for(var i = 0; i < 4; ++i)
+        {
+            // naive but fast (direction is set on paddle creation, 0/bottom, 1/up, 2/left, 3/right)
+            var iX = (i < 2) ? 0 : 1;
+            var iY = (i < 2) ? 1 : 0;
+
+            if(g_pPaddle[i].m_bWall)
+            {
+                // simply reflect the ball from a wall-paddle
+                     if(i === 0 && this.m_vPosition[1] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[1] + C_PADDLE_SIZE[iY]) this.m_vDirection[1] =  Math.abs(this.m_vDirection[1]);
+                else if(i === 1 && this.m_vPosition[1] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[1] - C_PADDLE_SIZE[iY]) this.m_vDirection[1] = -Math.abs(this.m_vDirection[1]);
+                else if(i === 2 && this.m_vPosition[0] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[0] + C_PADDLE_SIZE[iX]) this.m_vDirection[0] =  Math.abs(this.m_vDirection[0]);
+                else if(i === 3 && this.m_vPosition[0] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[0] - C_PADDLE_SIZE[iX])
+                {
+                    this.m_vDirection[0] = -Math.abs(this.m_vDirection[0]);
+                    if(Math.abs(this.m_vDirection[1]) < 0.15)
+                    {
+                        // prevent infinite ball
+                        this.m_vDirection[1] = 0.5;
+                        vec2.normalize(this.m_vDirection, this.m_vDirection);
+                    }
+                }
+            }
+            else
+            {
+                // increased range with shield attribute
+                vec2.set(cBall.s_vPrePaddleSize, C_PADDLE_SIZE[0]+(g_pPaddle[i].m_bShield ? 3.75 : 0.0), C_PADDLE_SIZE[1]);
+
+                if(this.m_vPosition[0] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[0] + cBall.s_vPrePaddleSize[iX] &&
+                   this.m_vPosition[0] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[0] - cBall.s_vPrePaddleSize[iX] &&
+                   this.m_vPosition[1] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[1] + cBall.s_vPrePaddleSize[iY] &&
+                   this.m_vPosition[1] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[1] - cBall.s_vPrePaddleSize[iY] &&
+                   vec2.dot(this.m_vDirection, g_pPaddle[i].m_vDirection) < 0.0)
+                {
+                    // calculate position-difference with old position
+                    var vDiff = cBall.s_vPreDiff;
+                    vec2.sub(vDiff, cBall.s_vPreOldPos, g_pPaddle[i].m_vPosition);
+
+                    // adapt and normalize the vector
+                    vDiff[iX] *= 0.1;
+                    vDiff[iY]  = Math.abs(vDiff[iY]) * g_pPaddle[i].m_vDirection[iY];
+                    vec2.normalize(vDiff, vDiff);
+
+                    // reflect ball
+                    Reflect(this.m_vDirection, this.m_vDirection, vDiff);
+                    this.m_vDirection[iY] = (Math.abs(this.m_vDirection[iY]) + 0.25) * g_pPaddle[i].m_vDirection[iY];
                     vec2.normalize(this.m_vDirection, this.m_vDirection);
+
+                    // start bump-effect
+                    g_pPaddle[i].m_fBump = 1.0;
                 }
             }
         }
-        else
-        {
-            // increased range with shield attribute
-            vec2.set(vPaddleSize, C_PADDLE_SIZE[0]+(g_pPaddle[i].m_bShield ? 3.75 : 0.0), C_PADDLE_SIZE[1]);
-
-            if(this.m_vPosition[0]-C_BALL_SIZE < g_pPaddle[i].m_vPosition[0]+vPaddleSize[iX] &&
-               this.m_vPosition[0]+C_BALL_SIZE > g_pPaddle[i].m_vPosition[0]-vPaddleSize[iX] &&
-               this.m_vPosition[1]-C_BALL_SIZE < g_pPaddle[i].m_vPosition[1]+vPaddleSize[iY] &&
-               this.m_vPosition[1]+C_BALL_SIZE > g_pPaddle[i].m_vPosition[1]-vPaddleSize[iY] &&
-               vec2.dot(this.m_vDirection, g_pPaddle[i].m_vDirection) < 0.0)
-            {
-                // calculate position-difference with old position
-                var vDiff = vec2.create();
-                vec2.sub(vDiff, vOldPos, g_pPaddle[i].m_vPosition);
-
-                // adapt and normalize the vector
-                vDiff[iX] *= 0.1;
-                vDiff[iY]  = Math.abs(vDiff[iY]) * g_pPaddle[i].m_vDirection[iY];
-                vec2.normalize(vDiff, vDiff);
-
-                // reflect ball
-                this.m_vDirection = Reflect(this.m_vDirection, vDiff);
-                this.m_vDirection[iY] = (Math.abs(this.m_vDirection[iY]) + 0.25) * g_pPaddle[i].m_vDirection[iY];
-                vec2.normalize(this.m_vDirection, this.m_vDirection);
-
-                // start bump-effect
-                g_pPaddle[i].m_fBump = 1.0;
-            }
-        }
     }
-
-    // update size
-    this.m_fSize = Math.min(this.m_fSize + g_fTime*3.0*C_BALL_SIZE, C_BALL_SIZE);
 
     // update transformation matrix
     mat4.identity(this.m_mTransform);
-    mat4.scale(this.m_mTransform, this.m_mTransform, [this.m_fSize, this.m_fSize, this.m_fSize]);
+    mat4.scale(this.m_mTransform, this.m_mTransform, [C_BALL_SIZE, C_BALL_SIZE, C_BALL_SIZE]);
     mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
+};
+
+
+// ****************************************************************
+cBall.CreateBall = function(vPosition, vDirection, bFirst)
+{
+    for(var i = 0; i < C_BALLS; ++i)
+    {
+        if(!g_pBall[i].m_bActive)
+        {
+            // activate and init new ball
+            g_pBall[i].m_fSpeed  = 40.0 + g_iLevel*0.5;
+            g_pBall[i].m_bActive = true;
+            vec2.set(g_pBall[i].m_vPosition,  vPosition[0],  vPosition[1]);
+            vec2.normalize(g_pBall[i].m_vDirection, vDirection);
+
+            // hide him on start
+            g_pBall[i].m_fAlpha = bFirst ? 0.0 : 1.0;
+            mat4.scale(g_pBall[i].m_mTransform, g_pBall[i].m_mTransform, [0.0, 0.0, 0.0]);
+
+            return;
+        }
+    }
 };

@@ -44,6 +44,7 @@ function cShader(sVertexShader, sFragmentShader)
     this.m_iUniformModelView     = GL.getUniformLocation(this.m_iProgram, "u_m4ModelView");
     this.m_iUniformNormal        = GL.getUniformLocation(this.m_iProgram, "u_m3Normal");
     this.m_iUniformColor         = GL.getUniformLocation(this.m_iProgram, "u_v4Color");
+    this.m_iUniformAlpha         = GL.getUniformLocation(this.m_iProgram, "u_fAlpha"); // dedicated alpha
 }
 
 

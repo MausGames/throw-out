@@ -54,6 +54,7 @@
         <script src="data/scripts/paddle.js"></script>
         <script src="data/scripts/ball.js"></script>
         <script src="data/scripts/block.js"></script>
+
         <script src="data/scripts/main.js"></script>
 
     </head>
@@ -78,13 +79,13 @@
         </div>
 
         <!-- Level Title -->
-        <div id="text-level" class="middle" style="font: 3.5em square; top: 40%;">
+        <div id="text-level" class="middle" style="font: 3.5em square; top: 28%; opacity: 1.0">
             <font class="header"> </font>
         </div>
 
         <!-- Score Board -->
         <div id="text-score" class="middle" style="font: 2.8em square; top: 15%;">
-            <font> Score: <br /> 000000 <br /><br /> Time Bonus: <br /> 000000</font>
+            <font> </font>
         </div>
 
         <!-- First Option -->
@@ -99,7 +100,7 @@
 
         <!-- Copyright -->
         <div id="text-bottom-left" class="side" style="font: 1.8em square; left: 1%; bottom: 1%;">
-            <font>(c) 2014 <a href="http://www.maus-games.at" target="_blank">Maus Games</a> - v0.8a</font>
+            <font>(c) 2014 <a href="http://www.maus-games.at" target="_blank">Maus Games</a> - v0.9a</font>
         </div>
 
         <!-- Game Jolt -->
@@ -107,10 +108,16 @@
             <font>Play on <a href="http://gamejolt.com/games/arcade/bo/20444/" target="_blank">Game Jolt</a></font>
         </div>
 
-        <!-- Configuration -->
-        <div id="text-top-right" class="side" style="font: 2.2em square; right: 1%; top: 1%;">
+        <!-- Video Configuration -->
+        <div id="text-top-right" class="side" style="font: 2.8em square; right: 1%; top: 1%;">
             <font id="fullscreen" class="button"><span title="Fullscreen">F</span></font>&nbsp;
             <font id="quality" class="button"><span title="Quality">Q</span></font>
+        </div>
+
+        <!-- Audio Configuration -->
+        <div id="text-top-left" class="side" style="font: 1.8em square; left: 1%; top: 1%;">
+            <font>0<input id="volume-1" type="range" name="points" min="1" max="10" style="width: 100px;"> Sound</font><br />
+            <font>0<input id="volume-2" type="range" name="points" min="1" max="10" style="width: 100px;"> Music</font>
         </div>
 
     </body>
