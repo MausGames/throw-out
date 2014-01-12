@@ -20,13 +20,15 @@ function cModel(afVertexData, aiIndexData)
     // create index buffer
     this.m_iIndexBuffer = GL.createBuffer();
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.m_iIndexBuffer);
-    GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, IsIE ? new Uint16Array(aiIndexData) : new Uint8Array(aiIndexData), GL.STATIC_DRAW);
+    GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, IsExp ? new Uint16Array(aiIndexData) : new Uint8Array(aiIndexData), GL.STATIC_DRAW);
 
     // reset current vertex buffer
     cModel.s_iCurVertexBuffer = 0;
 
-    // set index format (without general init)
-    cModel.s_iIndexFormat = IsIE ? GL.UNSIGNED_SHORT : GL.UNSIGNED_BYTE;
+    // enable attributes and set index format (# every time without general init)
+    cModel.s_iIndexFormat = IsExp ? GL.UNSIGNED_SHORT : GL.UNSIGNED_BYTE;
+    GL.enableVertexAttribArray(0);
+    GL.enableVertexAttribArray(1);
 }
 
 
@@ -49,9 +51,7 @@ cModel.prototype.Render = function()
         GL.bindBuffer(GL.ARRAY_BUFFER,         this.m_iVertexBuffer);
         GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.m_iIndexBuffer);
 
-        // enable and set attributes
-        GL.enableVertexAttribArray(0);
-        GL.enableVertexAttribArray(1);
+        // set attributes
         GL.vertexAttribPointer(0, 3, GL.FLOAT, false, 6*4, 0);
         GL.vertexAttribPointer(1, 3, GL.FLOAT, false, 6*4, 3*4);
     }

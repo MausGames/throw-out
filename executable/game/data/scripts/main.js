@@ -6,9 +6,12 @@ var TEX;                          // texture canvas 2d context
 
 var C_CAMERA_OFF   = 22.0;        // Y camera offset
 var C_INTRO_BLOCKS = 5.8;         // moment when blocks are active in the intro
-var C_BALLS        = 20;          // max number of balls
+var C_BALLS        = 10;          // max number of balls
 
-var C_TRANSITION_START  = -2.0;   // start-value for level transition
+var C_HIT_RANGE  = 30.0;          // block-affect range of the ball (impact radius)
+var C_HIT_INVERT = 1.0/30.0;      // inverted range
+
+var C_TRANSITION_START  = -3.0;   // start-value for level transition
 var C_TRANSITION_CHANGE = -1.0;   // point to apply visual changes (add paddles, remove shield)
 var C_TRANSITION_LEVEL  =  0.0;   // point to load the level and reset border
 var C_TRANSITION_END    =  5.0;   // end-value for level transition
@@ -48,11 +51,14 @@ var QueryString = function()
     return asOutput;
 }();
 
-// check for IE user agent (currently(=2014-01-06) does not support antialiasing, stencil buffer and byte-indices)
+// check for IE user agent
 var IsIE = function() {return navigator.userAgent.match(/Trident/) ? true : false;}();
 
 // check if embedded on Game Jolt
 var IsGJ = function() {return window.location.hostname.match(/gamejolt/) ? true : false;}();
+
+// save experimental WebGL context status
+var IsExp = false;
 
 
 // ****************************************************************
@@ -68,18 +74,21 @@ var g_pMenuOption2 = null;
 var g_pMenuLeft    = null;
 var g_pMenuRight   = null;
 var g_pMenuTop     = null;
+var g_pMenuVolume  = null;
 var g_pMenuStart   = null;
 var g_pMenuEnd     = null;
 var g_pMenuFull    = null;
 var g_pMenuQuality = null;
-var g_pMenuVolume1 = null;
-var g_pMenuVolume2 = null;
+var g_pMenuMusic   = null;
+var g_pMenuSound   = null;
 var g_pMenuLevel   = null;
 var g_pMenuScore   = null;
 
 var g_mProjection = mat4.create();    // global projection matrix
 var g_mCamera     = mat4.create();    // global camera matrix
 var g_vView       = vec2.create();    // current postion and view of the camera
+var g_fCamAngle   = 0.0;              // azimuth of the camera
+var g_fCamAcc     = 1.0;              // camera move acceleration (to enable smoother targeting when creating new balls)
 
 var g_vMousePos = vec2.create();      // current position of the cursor [-V/2, V/2]
 
@@ -91,7 +100,9 @@ var g_fLevelTime = 0.0;               // total time since start of the current l
 
 var g_iStatus = C_STATUS_INTRO;       // application status
 var g_iLevel  = 0;                    // current level number
-var g_iScore  = 0;                    // current player score
+var g_iScore  = 0;                    // current player score (handled as float)
+
+var g_bDepthSort = false;             // render blocks depth-sorted
 
 var g_fFade       = 1.0;              // time for main menu fade-out and fail menu fade-in
 var g_fTransition = 0.0;              // time for level transitions
@@ -103,14 +114,20 @@ var g_iActiveMulti = 1;               // status of displaying the score multipli
 var g_iActiveTime  = 0;               // status of displaying the total time
 
 var g_bQuality      = true;           // current quality level
+var g_bMusic        = true;           // current music status
+var g_bSound        = true;           // current sound status
 var g_bGameJolt     = false;          // logged in on Game Jolt
 var g_fGameJoltPing = 0.0;            // timer for Game Jolt user session ping
 
 var g_iRequestID = 0;                 // ID from requestAnimationFrame()
 
 var g_mMatrix      = mat4.create();   // pre-allocated general purpose matrix
+var g_vVector      = vec4.create();   // pre-allocated general purpose vector
+
 var g_vWeightedPos = vec2.create();   // pre-allocated weighted position for camera calculation
 var g_vAveragePos  = vec2.create();   // pre-allocated average position for camera calculation
+var g_vCamPos      = vec3.create();   // pre-allocated camera position
+var g_vCamTar      = vec3.create();   // pre-allocated camera target
 
 var g_pPlane  = null;                 // plane object
 var g_pPaddle = null;                 // paddle/wall object array
@@ -124,20 +141,26 @@ function Init()
     // retrieve main canvas
     g_pCanvas = document.getElementById("canvas");
 
-    // define WebGL context attributes
-    var abAttributes = {alpha : true, depth : true, stencil : false, antialias : true,
-                        premultipliedAlpha : true, preserveDrawingBuffer : false};
+    // define WebGL context properties (not necessary)
+    var abProperty = {alpha : true, depth : true, stencil : false, antialias : true,
+                      premultipliedAlpha : true, preserveDrawingBuffer : false};
 
     // retrieve WebGL context
-    GL = g_pCanvas.getContext("webgl", abAttributes) || g_pCanvas.getContext("experimental-webgl", abAttributes);
+    GL = g_pCanvas.getContext("webgl", abProperty);
     if(!GL)
     {
-        document.body.style.background = "#FAFAFF";
-        document.body.innerHTML = "<p style='font: bold 16px sans-serif; width: 400px; height: 140px; position: absolute; left: 50%; top: 50%; margin: -70px 0 0 -200px; text-align: center;'>" +
-                                  "<img src='data/images/webgl_logo.png'/><br/>" +
-                                  "Your browser sucks and doesn't support WebGL.<br/>" +
-                                  "Visit <a href='http://get.webgl.org/' style='color: blue;'>http://get.webgl.org/</a> for more information.</p>";
-        return;
+        GL = g_pCanvas.getContext("experimental-webgl", abProperty);
+        IsExp = true;
+
+        if(!GL)
+        {
+            document.body.style.background = "#FAFAFF";
+            document.body.innerHTML = "<p style='font: bold 16px sans-serif; position: absolute; left: 50%; top: 49%; width: 400px; height: 140px; margin: -70px 0 0 -200px; text-align: center;'>" +
+                                      "<img src='data/images/webgl_logo.png'/><br/>" +
+                                      "Your browser sucks and doesn't support WebGL.<br/>" +
+                                      "Visit <a href='http://get.webgl.org/' style='color: blue;'>http://get.webgl.org/</a> for more information.</p>";
+            return;
+        }
     }
 
     // retrieve texture canvas and 2d context
@@ -179,7 +202,7 @@ function Init()
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
     // reset current camera view
-    g_vView[1] = C_BALL_START[1] + C_CAMERA_OFF;
+    g_vView[1] = C_BALL_START[1];
 
     // init object interfaces
     cPlane.Init(true);
@@ -229,14 +252,8 @@ window.addEventListener("beforeunload", function()   // Exit()
     cBall.Exit();
     cBlock.Exit();
 
-    // exit the Game Jolt user session
-    if(g_bGameJolt)
-    {
-        // may not work
-        SendGameJolt("/sessions/close/"                             +
-                     "?username="   + QueryString["gjapi_username"] +
-                     "&user_token=" + QueryString["gjapi_token"], true);
-    }
+    // close Game Jolt user session (may not work)
+    if(g_bGameJolt) GameJoltSessionClose();
 }, false);
 
 
@@ -272,14 +289,15 @@ function Render(iNewTime)
         for(var i = C_LEVEL_CENTER; i < C_LEVEL_ALL; ++i)
             g_pBlock[i].Render();
     }
-    if(g_fTotalTime >= C_INTRO_BLOCKS)
+
+    if(!g_bDepthSort && g_fTotalTime >= C_INTRO_BLOCKS)
     {
-        // render inside blocks (reverse because of depth testing, index 0 is top-left)
+        // render inside blocks (reversed because of depth testing, index 0 is top-left)
         for(var i = C_LEVEL_CENTER-1; i >= 0; --i)
             g_pBlock[i].Render();
     }
 
-    // render plane (after blocks and paddles because of depth testing)
+    // render plane (after reverse blocks and paddles because of depth testing)
     cPlane.UpdateTexture((g_iActiveTime === 2) ? Math.floor(g_fStatTime) : 0, g_iScore, (g_iActiveMulti === 2) ? g_fStatMulti : 0);
     g_pPlane.Render();
 
@@ -288,6 +306,13 @@ function Render(iNewTime)
         // render balls (after plane because of transparency)
         for(var i = 0; i < C_BALLS; ++i)
             g_pBall[i].Render();
+    }
+
+    if(g_bDepthSort && g_fTotalTime >= C_INTRO_BLOCKS)
+    {
+        // render inside blocks (sorted and after plane and balls for transparency effects)
+        for(var i = 0; i < C_LEVEL_CENTER; ++i)
+            g_pBlock[i].Render();
     }
 
     // move application
@@ -340,6 +365,9 @@ function Move()
 
         // update total time in fail menu
         g_fFail += g_fTime;
+
+        // rotate camera
+        g_fCamAngle += g_fTime*0.2;
     }
 
     // update game
@@ -356,7 +384,7 @@ function Move()
         {
             // update the transition between two levels
             var fOldTransition = g_fTransition;
-            g_fTransition += g_fTime;
+            g_fTransition = Math.min(g_fTransition+g_fTime, C_TRANSITION_END);
 
             // create first ball on transitions end
             if(!InTransition()) cBall.CreateBall(C_BALL_START, cLevel.s_avBallDir[g_iLevel], true);
@@ -365,16 +393,16 @@ function Move()
             var fLevelOpacity = Math.sin(Math.PI*Clamp(g_fTransition, 0.0, C_TRANSITION_END-1.0)/(C_TRANSITION_END-1.0));
             SetOpacity(g_pMenuLevel, fLevelOpacity);
 
+            // reset camera rotation smoothly
+            g_fCamAngle = InTransition() ? g_fCamAngle*(1.0 - g_fTime) : 0.0;
+
             if(fOldTransition < C_TRANSITION_CHANGE && g_fTransition >= C_TRANSITION_CHANGE)
             {
-                // set walls and reset shield (but not on last level)
-                if(g_iLevel+1 < C_LEVEL_NUM)
+                // set walls and reset shield
+                for(var i = 0; i < 4; ++i)
                 {
-                    for(var i = 0; i < 4; ++i)
-                    {
-                        g_pPaddle[i].m_bWall = cLevel.s_aabPaddle[g_iLevel][i] ? false : true;
-                        g_pPaddle[i].m_bShield = false;
-                    }
+                    g_pPaddle[i].m_bWall   = cLevel.s_aabPaddle[g_iLevel][i] ? false : true;
+                    g_pPaddle[i].m_bShield = false;
                 }
             }
             else if(fOldTransition < C_TRANSITION_LEVEL && g_fTransition >= C_TRANSITION_LEVEL)
@@ -388,7 +416,8 @@ function Move()
         g_fLevelTime += g_fTime;
         
         // apply level-specific function
-        if(cLevel.s_apFunction[g_iLevel]) cLevel.s_apFunction[g_iLevel]();
+        if(cLevel.s_apFunction[g_iLevel] && g_fTransition >= C_TRANSITION_LEVEL)
+            cLevel.s_apFunction[g_iLevel]();
 
         // move balls
         for(var i = 0; i < C_BALLS; ++i)
@@ -431,8 +460,8 @@ function Move()
 
     if(!fNum) // no balls
     {
-        // currently no ball active, set camera to spawn-point
-        vec2.set(g_vAveragePos, C_BALL_START[0], C_BALL_START[1] + C_CAMERA_OFF);
+        // currently no ball active, set camera to center or spawn-point
+        vec2.copy(g_vAveragePos, C_BALL_START);
         if(g_iStatus === C_STATUS_GAME)
         {
             // no ball active and no level transition means player failed (game ends!)
@@ -442,9 +471,10 @@ function Move()
     else // at least one ball
     {
         // calculate average ball-position
-        vec2.div(g_vAveragePos, g_vAveragePos, [fNum, fNum]);
+        var fInvNum = 1.0/fNum;
+        g_vAveragePos[0] *= fInvNum;
+        g_vAveragePos[1] *= fInvNum;
         if(fNum > 1.0) g_vAveragePos[1] = g_vAveragePos[1]*0.1 + fMin*0.9;
-        g_vAveragePos[1] += C_CAMERA_OFF;
 
         // set current play time
         if(g_iActiveTime === 1) g_iActiveTime = 2;
@@ -454,34 +484,58 @@ function Move()
         if(g_iActiveMulti === 1) g_iActiveMulti = 2;
         g_fStatMulti = Math.max(Math.floor(fNum), 1.0) * (1.0 + g_iLevel*0.2);
     }
+    if(g_iStatus === C_STATUS_FAIL) vec2.set(g_vAveragePos, 0.0, 0.0);
 
-    // calculate new camera attributes
-    var fCamSpeed = g_fTime * ((g_iStatus === C_STATUS_GAME && !InTransition()) ? ((fNum > 1.0) ? 7.5 : 10.0) : 0.5);
+    // accelerate camera
+    g_fCamAcc = Math.min(g_fCamAcc + g_fTime*1.0, 1.0);
+
+    // calculate new camera view
+    var fCamSpeed = g_fTime * ((g_iStatus === C_STATUS_GAME && !InTransition()) ? ((fNum > 1.0) ? 7.0 : 10.0) : 0.5) * g_fCamAcc;
     g_vView[0] += (g_vAveragePos[0] - g_vView[0])*fCamSpeed;
     g_vView[1] += (g_vAveragePos[1] - g_vView[1])*fCamSpeed;
 
-    // create new camera matrix
-    mat4.lookAt(g_mCamera, [g_vView[0]*0.3, g_vView[1]*0.5-42.5, 45.0], [g_vView[0]*0.5, g_vView[1]*0.5-11.5, fCameraZ], [0.0, 0.0, 1.0]);
+    // begin camera creation, move camera away from the center
+    var fAway = (C_CAMERA_OFF + (g_fFail ? (1.0-(1.0/(1.0+g_fFail)))*C_BALL_START[1] : 0.0))*0.5;
+    vec3.set(g_vCamPos, 0.0, -42.5+fAway, 0.0);
+    vec3.set(g_vCamTar, 0.0, -11.5+fAway, 0.0);
 
-    // rotate camera on final screen
-    if(g_iStatus === C_STATUS_FAIL) mat4.rotateZ(g_mCamera, g_mCamera, g_fFail*0.2);
+    // set camera view strength (X < Y for a mild side-turn)
+    vec2.set(g_vVector, 0.3, 0.5);
+
+    if(g_fCamAngle)
+    {
+        // create rotation matrix
+        mat4.identity(g_mMatrix);
+        mat4.rotateZ(g_mMatrix, g_mMatrix, g_fCamAngle);
+        
+        // rotate camera position around the center
+        vec2.transformMat4(g_vCamPos, g_vCamPos, g_mMatrix);
+        vec2.transformMat4(g_vCamTar, g_vCamTar, g_mMatrix);
+
+        // rotate camera view strength
+        vec2.transformMat4(g_vVector, g_vVector, g_mMatrix);
+        g_vVector[0] = Math.abs(g_vVector[0]);
+        g_vVector[1] = Math.abs(g_vVector[1]);
+    }
+
+    // add view and create new camera matrix (# quite over-engineered, dunno how this happened)
+    vec3.add(g_vCamPos, g_vCamPos, [g_vView[0]*g_vVector[0], g_vView[1]*g_vVector[1], 45.0]);
+    vec3.add(g_vCamTar, g_vCamTar, [g_vView[0]*0.5,          g_vView[1]*0.5,          fCameraZ]);
+    mat4.lookAt(g_mCamera, g_vCamPos, g_vCamTar, [0.0, 0.0, 1.0]);
 
     if(g_bGameJolt)
     {
-        // ping the Game Jolt user session
+        // ping Game Jolt user session
         g_fGameJoltPing += g_fTime;
         if(g_fGameJoltPing >= 30.0)
         {
-            var sStatus = C_STATUS_GAME ? "active" : "idle";
-            SendGameJolt("/sessions/ping/"                              +
-                         "?username="   + QueryString["gjapi_username"] +
-                         "&user_token=" + QueryString["gjapi_token"]    +
-                         "&status="     + sStatus, true);
+            g_fGameJoltPing = 0.0;
+            GameJoltSessionPing();
         }
     }
 
     // request next frame
-    GL.flush();
+    GL.flush(); // just in case, but not required
     g_iRequestID = requestAnimationFrame(Render, g_pCanvas);
 }
 
@@ -526,17 +580,18 @@ function SetupRefresh()
 // ****************************************************************
 function SetupInput()
 {
-    // implement mouse movement
-    document.body.onmousemove = function(pCursor)
+    // implement mouse event movement
+    document.addEventListener('mousemove', function(pCursor)
     {
         var oRect = g_pCanvas.getBoundingClientRect();
 
         // set mouse position relative to the canvas
-        g_vMousePos[0] = pCursor.clientX - oRect.left - (oRect.right  - oRect.left)/2;
-        g_vMousePos[1] = pCursor.clientY - oRect.top  - (oRect.bottom - oRect.top)/2;
+        var fRange = 1.0 / g_pCanvas.height;
+        g_vMousePos[0] = (pCursor.clientX - oRect.left - (oRect.right  - oRect.left)/2) * fRange;
+        g_vMousePos[1] = (pCursor.clientY - oRect.top  - (oRect.bottom - oRect.top )/2) * fRange;
 
         return true;
-    };
+    }, false);
 
     // implement touch event movement
     document.addEventListener('touchmove', function(pEvent)
@@ -548,15 +603,16 @@ function SetupInput()
         var pTouch = pEvent.touches[0];
 
         // set mouse position relative to the canvas
-        g_vMousePos[0] = pTouch.pageX - oRect.left - (oRect.right  - oRect.left)/2;
-        g_vMousePos[1] = pTouch.pageY - oRect.top  - (oRect.bottom - oRect.top)/2;
+        var fRange = 1.0 / g_pCanvas.height;
+        g_vMousePos[0] = (pTouch.pageX - oRect.left - (oRect.right  - oRect.left)/2) * fRange;
+        g_vMousePos[1] = (pTouch.pageY - oRect.top  - (oRect.bottom - oRect.top )/2) * fRange;
     }, false);
 
     // implement pause with any keyboard key
-    document.body.onkeypress = function() {ActivatePause(true);};
+    document.onkeypress = function() {ActivatePause(true);};
 
     // implement auto-pause if window-focus is lost
-    window.onblur = document.body.onkeypress;
+    window.onblur = document.onkeypress;
 }
 
 
@@ -572,12 +628,13 @@ function SetupMenu()
     g_pMenuLeft    = document.getElementById("text-bottom-left");
     g_pMenuRight   = document.getElementById("text-bottom-right");
     g_pMenuTop     = document.getElementById("text-top-right");
+    g_pMenuVolume  = document.getElementById("text-top-left");
     g_pMenuStart   = document.getElementById("start");
     g_pMenuEnd     = document.getElementById("end");
     g_pMenuFull    = document.getElementById("fullscreen");
     g_pMenuQuality = document.getElementById("quality");
-    g_pMenuVolume1 = document.getElementById("volume-1");
-    g_pMenuVolume2 = document.getElementById("volume-2");
+    g_pMenuMusic   = document.getElementById("music");
+    g_pMenuSound   = document.getElementById("sound");
     g_pMenuLevel   = document.getElementById("text-level");
     g_pMenuScore   = document.getElementById("text-score");
 
@@ -615,16 +672,29 @@ function SetupMenu()
         else if(pDoc.msRequestFullscreen)     pDoc.msRequestFullscreen();
     };
 
-    // set Game Jolt user string
+    // implement volume buttons (# I hope the effect is clear, had some troubles with bad range-element and unicode support)
+    g_pMenuMusic.onmousedown = function()
+    {
+        g_bMusic = !g_bMusic;
+        this.style.color = g_bMusic ? "" : "#444444";
+    };
+    g_pMenuSound.onmousedown = function()
+    {
+        g_bSound = !g_bSound;
+        this.style.color = g_bSound ? "" : "#444444";
+    };
+
+    // adjust back button
+    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (QueryString["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
+
     if(QueryString["gjapi_username"] && QueryString["gjapi_token"])
     {
+        // set Game Jolt user string
         g_pMenuRight.innerHTML = "<font>Logged in as " + QueryString["gjapi_username"] + "</font>";
         g_bGameJolt = true;
 
-        // init the Game Jolt user session (ignore check for valid credentials)
-        SendGameJolt("/sessions/open/"                              +
-                     "?username="   + QueryString["gjapi_username"] +
-                     "&user_token=" + QueryString["gjapi_token"], true);
+        // open Game Jolt user session (ignore check for valid credentials)
+        GameJoltSessionOpen();
     }
 }
 
@@ -651,7 +721,7 @@ function Resize()
     g_pMenuOption2.style.width = sWidth;
     g_pMenuLevel.style.width   = sWidth;
     g_pMenuScore.style.width   = sWidth;
-
+    
     var sMargin = -g_pCanvas.width*0.5 + "px";
     g_pMenuHeader.style.marginLeft  = sMargin;
     g_pMenuOption1.style.marginLeft = sMargin;
@@ -697,12 +767,14 @@ function SetMenuOpacity(iType, fOpacity)
         SetOpacity(g_pMenuLeft,   fOpacity);
         SetOpacity(g_pMenuRight,  fOpacity);
         SetOpacity(g_pMenuTop,    fOpacity);
+        SetOpacity(g_pMenuVolume, fOpacity);
     }
     else if(iType === C_MENU_PAUSE)
     {
         // set pause menu opacity
         SetOpacity(g_pMenuHeader, fOpacity);
         SetOpacity(g_pMenuTop,    fOpacity);
+        SetOpacity(g_pMenuVolume, fOpacity);
     }
     else if(iType === C_MENU_FAIL)
     {
@@ -724,14 +796,16 @@ function SetMenuEnable(iType, bEnabled)
     if(iType === C_MENU_MAIN)
     {
         // enable or disable main menu interaction
-        g_pMenuLeft.style.pointerEvents  = sValue;
-        g_pMenuRight.style.pointerEvents = sValue;
-        g_pMenuTop.style.pointerEvents   = sValue;
+        g_pMenuLeft.style.pointerEvents   = sValue;
+        g_pMenuRight.style.pointerEvents  = sValue;
+        g_pMenuTop.style.pointerEvents    = sValue;
+        g_pMenuVolume.style.pointerEvents = sValue;
     }
     else if(iType === C_MENU_PAUSE)
     {
         // enable or disable pause menu interaction
-        g_pMenuTop.style.pointerEvents = sValue;
+        g_pMenuTop.style.pointerEvents    = sValue;
+        g_pMenuVolume.style.pointerEvents = sValue;
     }
     else if(iType === C_MENU_FAIL)
     {
@@ -796,40 +870,30 @@ function ActivateFail()
     g_pMenuScore.innerHTML = "<font>Thank you for playing!<br /><br />Final Score:<br />" + IntToString(g_iScore.toFixed(0), 6) +"</font>";
 
     // send score to Game Jolt
-    if(g_bGameJolt)
-    {
-        SendGameJolt("/scores/add/"                                   +
-                     "?username="   + QueryString["gjapi_username"]   +
-                     "&user_token=" + QueryString["gjapi_token"]      +
-                     "&table_id="   + 21033                           +
-                     "&score="      + g_iScore.toFixed(0) + " Points" +
-                     "&sort="       + g_iScore.toFixed(0), true);
-    }
+    if(g_bGameJolt) GameJoltScoreAdd();
 
     // set option elements and implement application restart and return
     var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location;
     g_pMenuOption1.innerHTML = "<font id='start' class='button'><a href='" + sSkip + "'>Restart</a></font>";
-    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-1)'>Go Back</a></font>";
+    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (QueryString["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
 
-    // enable the pause menu (opacity is faded in Move())
+    // enable the fail menu (opacity is faded in Move())
     SetMenuEnable(C_MENU_FAIL, true);
     SetCursor(false);
 
     // throw out all missing blocks (as special effect)
-    var vDir = vec2.create();
     for(var i = 0; i < C_LEVEL_ALL; ++i)
     {
-        vec2.copy(vDir, g_pBlock[i].m_vPosition);
-        vec2.normalize(vDir, vDir);
-        g_pBlock[i].Throw(vDir);
+        vec3.sub(g_vVector, g_pBlock[i].m_vPosition, [0.0, 0.0, -10.0]);
+        var fStrength = Math.max(40.0 - vec3.length(g_vVector), 0.0)*0.05;
+        
+        vec3.normalize(g_vVector, g_vVector);
+        g_vVector[0] *= fStrength;
+        g_vVector[1] *= fStrength;
+        g_vVector[2] *= fStrength*70.0;
+
+        g_pBlock[i].Throw(g_vVector, g_vVector[2]);
     }
-}
-
-
-// ****************************************************************
-function SendGameJolt(sString, bAsync)
-{
-    // -HIDDEN-
 }
 
 
