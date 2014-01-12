@@ -238,19 +238,24 @@ cPaddle.s_aiIndexDataLow =
 [4, 6, 5, 5, 6, 7, 1, 0, 5, 5, 0, 4, 0, 2, 4, 4, 2, 6, 2, 3, 6, 6, 3, 7, 3, 1, 7, 7, 1, 5, 1, 3, 0, 0, 3, 2];
 
 cPaddle.s_sVertexShader =
-"attribute vec3 a_v3Position;"                                      +
-"attribute vec3 a_v3Normal;"                                        +
-"uniform   mat4 u_m4ModelViewProj;"                                 +
-"uniform   mat4 u_m4ModelView;"                                     +
-"varying   vec3 v_v3Relative;"                                      +
-"varying   vec3 v_v3Normal;"                                        +
-""                                                                  +
-"void main()"                                                       +
-"{"                                                                 +
-"    v_v3Relative = (u_m4ModelView * vec4(a_v3Position, 1.0)).xyz;" +
-"    v_v3Normal   = a_v3Normal;"                                    +
-""                                                                  +
-"    gl_Position  = u_m4ModelViewProj * vec4(a_v3Position, 1.0);"   +
+"attribute vec3  a_v3Position;"                                                  +
+"attribute vec3  a_v3Normal;"                                                    +
+"uniform   mat4  u_m4ModelViewProj;"                                             +
+"uniform   mat4  u_m4ModelView;"                                                 +
+"uniform   float u_fLength;"                                                     +
+"uniform   float u_fLengthDiv;"                                                  +
+"varying   vec3  v_v3Relative;"                                                  +
+"varying   vec3  v_v3Normal;"                                                    +
+""                                                                               +
+"void main()"                                                                    +
+"{"                                                                              +
+"    vec3 v3Stretch = a_v3Position;"                                             +
+"    v3Stretch.x    = (v3Stretch.x + u_fLength*sign(v3Stretch.x))*u_fLengthDiv;" +
+""                                                                               +
+"    v_v3Relative = (u_m4ModelView * vec4(v3Stretch, 1.0)).xyz;"                 +
+"    v_v3Normal   = a_v3Normal;"                                                 +
+""                                                                               +
+"    gl_Position  = u_m4ModelViewProj * vec4(v3Stretch, 1.0);"                   +
 "}";
 
 cPaddle.s_sFragmentShader =
@@ -275,18 +280,20 @@ cPaddle.s_sFragmentShader =
 "    gl_FragColor = vec4(u_v4Color*fIntensity, 1.0);"                         +
 "}";
 
-var C_PADDLE_SIZE = vec2.fromValues(4.5, 0.3);
+var C_PADDLE_RANGE = 0.3;
 
 
 // ****************************************************************
 cPaddle.s_pModel  = null;
 cPaddle.s_pShader = null;
 
-// saved uniform values
-cPaddle.s_vSaveColor = vec3.create();
+// own uniform location
+cPaddle.s_iUniformLength    = -1;
+cPaddle.s_iUniformLengthDiv = -1;
 
-// pre-allocated function variables
-cPaddle.s_vPreNewColor = vec3.create();
+// saved uniform values
+cPaddle.s_vSaveColor  = vec3.create();
+cPaddle.s_fSaveLength = 0.0;
 
 
 // ****************************************************************
@@ -298,7 +305,12 @@ cPaddle.Init = function(bHigh)
          else cPaddle.s_pModel  = new cModel(cPaddle.s_afVertexDataLow, cPaddle.s_aiIndexDataLow);
 
     // define shader-program
-    if(cPaddle.s_pShader === null) cPaddle.s_pShader = new cShader(cPaddle.s_sVertexShader, cPaddle.s_sFragmentShader);
+    if(cPaddle.s_pShader === null)
+    {
+        cPaddle.s_pShader = new cShader(cPaddle.s_sVertexShader, cPaddle.s_sFragmentShader);
+        cPaddle.s_iUniformLength    = GL.getUniformLocation(cPaddle.s_pShader.m_iProgram, "u_fLength");
+        cPaddle.s_iUniformLengthDiv = GL.getUniformLocation(cPaddle.s_pShader.m_iProgram, "u_fLengthDiv");
+    }
 };
 
 
@@ -339,8 +351,17 @@ cPaddle.prototype.Render = function()
     mat4.mul(g_mMatrix, g_mProjection, g_mMatrix);
     GL.uniformMatrix4fv(cPaddle.s_pShader.m_iUniformModelViewProj, false, g_mMatrix);
 
-    // check and update current color (check to reduce video brandwidth)
+    // check and update current values (check to reduce video brandwidth)
     if(!CompareArray(cPaddle.s_vSaveColor, this.m_vColor, 3)) {vec3.copy(cPaddle.s_vSaveColor, this.m_vColor); GL.uniform3f(cPaddle.s_pShader.m_iUniformColor, this.m_vColor[0], this.m_vColor[1], this.m_vColor[2]);}
+    if(cPaddle.s_fSaveLength !== this.m_vSize[0]) 
+    {
+        cPaddle.s_fSaveLength = this.m_vSize[0];
+
+        // required for non-linear scaling to keep those beautiful round borders
+        var fLength = Math.max(this.m_vSize[0]-1.8, 0.0)*0.5;
+        GL.uniform1f(cPaddle.s_iUniformLength,         3.6*fLength);
+        GL.uniform1f(cPaddle.s_iUniformLengthDiv, 1.0/(1.0+fLength));
+    }
 
     // render the model
     cPaddle.s_pModel.Render();
@@ -351,37 +372,40 @@ cPaddle.prototype.Render = function()
 cPaddle.prototype.Move = function()
 {
     var fTime = g_fTime*2.0;
+    var iX = this.m_vDirection[0] ? 0 : 1;
+    var iY = this.m_vDirection[0] ? 1 : 0;
 
-    // move paddle with the mouse cursor
-    var fSmooth = Clamp((9.0 - this.m_vSize[0])*0.25, 0.0, 1.0);
-    var fWide   = this.m_vSize[0] * 4.2;
-    if(this.m_vDirection[0])
-    {
-        this.m_vPosition[1] = this.m_bWall ? 0.0 : -Clamp(g_vMousePos[1]/17.2 * 2.0 * 1.4, -33.0+fWide, 33.0-fWide) * fSmooth;
-        this.m_vPosition[0] = -33.0*this.m_vDirection[0];
-    }
+    // set paddle position
+    if(this.m_bWall) this.m_vPosition[iY] *= 1.0 - fTime;
     else
     {
-        this.m_vPosition[0] = this.m_bWall ? 0.0 : Clamp(g_vMousePos[0]/17.2 * 2.0, -33.0+fWide, 33.0-fWide) * fSmooth;
-        this.m_vPosition[1] = -33.0*this.m_vDirection[1];
+        // move paddle with the mouse cursor
+        var fSmooth = Clamp((9.0 - this.m_vSize[0])*0.25, 0.0, 1.0);
+        var fWide   = 33.5 - this.m_vSize[0] * 3.6;
+        this.m_vPosition[iY] = Clamp(g_vMousePos[iY] * (iY ? 92.4 : 66.0), -fWide, fWide) * fSmooth * (iY ? -1.0 : 1.0);
     }
+    this.m_vPosition[iX] = -33.0*this.m_vDirection[iX];
 
     // update bump-effect
     this.m_fBump = Math.max(this.m_fBump-fTime, 0.0);
 
+    // currently in strong resize (for visually ugly speed-problems when buming into a resizing paddle)
+    var bResize = (this.m_vSize[0] > 9.0 && this.m_bWall) || (this.m_vSize[0] < 2.7 && !this.m_bWall);
+
     // update size
-    var fSpeed = (this.m_fBump ? g_fTime*30.0 : fTime);
-    this.m_vSize[0] += ((this.m_bWall ? 9.2 : 1.2*(1.0+this.m_fBump*0.5)+(this.m_bShield ? 1.0 : 0.0)) - this.m_vSize[0]) * fSpeed;
-    this.m_vSize[1] += ((1.25*(1.0+this.m_fBump*0.6))                                                  - this.m_vSize[1]) * fSpeed;
+    var fSpeed     = this.m_fBump ? g_fTime*30.0 : fTime;
+    var fGrowSpeed = bResize      ? fSpeed       : fTime;
+    this.m_vSize[0] += ((this.m_bWall ? 9.2  : (this.m_bShield ? 2.2 : 1.2)) - this.m_vSize[0] + 1.2 *(this.m_fBump*0.25)) * fGrowSpeed;
+    this.m_vSize[1] += (1.25                                                 - this.m_vSize[1] + 1.25*(this.m_fBump*0.30)) * fGrowSpeed;
 
     // update color
-    var fFactor = this.m_bWall ? 0.7 : 1.0;
-    if(this.m_bShield) vec3.set(cPaddle.s_vPreNewColor, 0.757*fFactor, 0.855*fFactor, 0.043*fFactor);
-                  else vec3.set(cPaddle.s_vPreNewColor, 0.102*fFactor, 0.702*fFactor, 1.000*fFactor);
+    var fFactor = (this.m_bWall ? 0.7 : 1.0) + Math.max(this.m_fBump-0.4, 0.0)*0.7;
+    if(this.m_bShield) vec3.set(g_vVector, 0.757*fFactor*1.15, 0.855*fFactor*1.15, 0.043*fFactor*1.15);
+                  else vec3.set(g_vVector, 0.102*fFactor,      0.702*fFactor,      1.000*fFactor);
 
-    this.m_vColor[0] += (cPaddle.s_vPreNewColor[0] - this.m_vColor[0])*fTime;
-    this.m_vColor[1] += (cPaddle.s_vPreNewColor[1] - this.m_vColor[1])*fTime;
-    this.m_vColor[2] += (cPaddle.s_vPreNewColor[2] - this.m_vColor[2])*fTime;
+    this.m_vColor[0] += (g_vVector[0] - this.m_vColor[0])*fSpeed;
+    this.m_vColor[1] += (g_vVector[1] - this.m_vColor[1])*fSpeed;
+    this.m_vColor[2] += (g_vVector[2] - this.m_vColor[2])*fSpeed;
 
     // update transformation matrix
     mat4.identity(this.m_mTransform);

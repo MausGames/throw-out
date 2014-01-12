@@ -212,7 +212,6 @@ cBall.s_vPreOldPos       = vec2.create();
 cBall.s_vPreBlockBallOff = vec4.create();
 cBall.s_vPreDiff         = vec2.create();
 cBall.s_vPreBurst        = vec2.create();
-cBall.s_vPrePaddleSize   = vec2.create();
 
 
 // ****************************************************************
@@ -242,8 +241,9 @@ function cBall()
     this.m_mTransform = mat4.create();
 
     this.m_fAlpha     = 0.0;
-    this.m_fSpeed     = 0.0;   // extern set
+    this.m_fSpeed     = 40.0;
     this.m_bActive    = false;
+    this.m_iHitPaddle = 0;
 }
 
 
@@ -336,7 +336,7 @@ cBall.prototype.Move = function()
             if(iNum >= C_LEVEL_CENTER)
             {
                 // reflect ball-direction from the border
-                iDir = (iNum >= C_LEVEL_CENTER+2*C_LEVEL_X) ? 0 : 1;
+                iDir = (iNum >= C_LEVEL_CENTER+2*C_LEVEL_BX) ? 0 : 1;
                 vDiff[iDir] = Math.abs(vDiff[iDir]) * -Signf(cBall.s_vPreOldPos[iDir]);
             }
             else
@@ -364,29 +364,39 @@ cBall.prototype.Move = function()
                 // calculate position-difference with current position
                 vec2.sub(vDiff, this.m_vPosition, g_pBlock[j].m_vPosition);
 
-                if(vec2.squaredLength(vDiff) < 30.0 && vec2.dot(cBall.s_vPreBurst, vDiff) < 0.0)
+                if(vec2.dot(cBall.s_vPreBurst, vDiff) < 0.0)
                 {
-                    vec2.normalize(vDiff, vDiff);
-                    
-                    // increase score
-                    g_iScore += 5 * g_fStatMulti;
-
-                    // handle typed blocks
-                    if(g_pBlock[j].m_iType === 1)
+                    // calculate damage
+                    var fDamage = (C_HIT_RANGE - vec2.squaredLength(vDiff))*C_HIT_INVERT;
+                    if(fDamage > 0.0)
                     {
-                        // create new ball
-                        cBall.CreateBall(g_pBlock[j].m_vPosition, vDiff, false);
-                    }
-                    if(g_pBlock[j].m_iType === 2)
-                    {
-                        // make paddles longer
-                        for(var k = 0; k < 4; ++k)
-                            g_pPaddle[k].m_bShield = true;
-                    }
+                        // damage block
+                        g_pBlock[j].m_fHealth -= fDamage;
+                        if(g_pBlock[j].m_fHealth <= 0.0)
+                        {
+                            vec2.normalize(vDiff, vDiff);
 
-                    // throw the block out
-                    vec2.negate(vDiff, vDiff);
-                    g_pBlock[j].Throw(vDiff);
+                            // increase score
+                            g_iScore += 5.0*g_fStatMulti;
+
+                            // handle typed blocks
+                            if(g_pBlock[j].m_iType === 1)
+                            {
+                                // create new ball
+                                cBall.CreateBall(g_pBlock[j].m_vPosition, vDiff, false);
+                            }
+                            if(g_pBlock[j].m_iType === 2)
+                            {
+                                // make paddles longer
+                                for(var k = 0; k < 4; ++k)
+                                    g_pPaddle[k].m_bShield = true;
+                            }
+
+                            // throw the block out
+                            vec2.negate(vDiff, vDiff);
+                            g_pBlock[j].Throw(vDiff, 30.0);
+                        }
+                    }
                 }
             }
 
@@ -394,13 +404,14 @@ cBall.prototype.Move = function()
             var iNum = 0;
             for(var j = 0; j < C_LEVEL_CENTER; ++j)
             {
-                if(g_pBlock[j].m_bActive)
+                if(!g_pBlock[j].m_bFlying)
                     ++iNum;
             }
             if(!iNum) NextLevel();
         }
 
         // test collision with paddles
+        this.m_iHitPaddle = 0;
         for(var i = 0; i < 4; ++i)
         {
             // naive but fast (direction is set on paddle creation, 0/bottom, 1/up, 2/left, 3/right)
@@ -409,32 +420,52 @@ cBall.prototype.Move = function()
 
             if(g_pPaddle[i].m_bWall)
             {
+                var bHit = false;
+
                 // simply reflect the ball from a wall-paddle
-                     if(i === 0 && this.m_vPosition[1] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[1] + C_PADDLE_SIZE[iY]) this.m_vDirection[1] =  Math.abs(this.m_vDirection[1]);
-                else if(i === 1 && this.m_vPosition[1] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[1] - C_PADDLE_SIZE[iY]) this.m_vDirection[1] = -Math.abs(this.m_vDirection[1]);
-                else if(i === 2 && this.m_vPosition[0] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[0] + C_PADDLE_SIZE[iX]) this.m_vDirection[0] =  Math.abs(this.m_vDirection[0]);
-                else if(i === 3 && this.m_vPosition[0] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[0] - C_PADDLE_SIZE[iX])
+                     if(i === 0 && this.m_vPosition[1] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[1] + C_PADDLE_RANGE) {this.m_vDirection[1] =  Math.abs(this.m_vDirection[1]); bHit = true;}
+                else if(i === 1 && this.m_vPosition[1] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[1] - C_PADDLE_RANGE)
                 {
-                    this.m_vDirection[0] = -Math.abs(this.m_vDirection[0]);
-                    if(Math.abs(this.m_vDirection[1]) < 0.15)
+                    this.m_vDirection[1] = -Math.abs(this.m_vDirection[1]);
+                    bHit = true;
+
+                    if(g_pPaddle[0].m_bWall && g_pPaddle[1].m_bWall && Math.abs(this.m_vDirection[0]) < 0.15)
                     {
-                        // prevent infinite ball
-                        this.m_vDirection[1] = 0.5;
+                        // prevent infinite Y ball
+                        this.m_vDirection[0] = -1.0*Signf(this.m_vPosition[0]);
                         vec2.normalize(this.m_vDirection, this.m_vDirection);
                     }
                 }
+                else if(i === 2 && this.m_vPosition[0] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[0] + C_PADDLE_RANGE) {this.m_vDirection[0] =  Math.abs(this.m_vDirection[0]); bHit = true;}
+                else if(i === 3 && this.m_vPosition[0] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[0] - C_PADDLE_RANGE)
+                {
+                    this.m_vDirection[0] = -Math.abs(this.m_vDirection[0]);
+                    bHit = true;
+
+                    if(g_pPaddle[2].m_bWall && g_pPaddle[3].m_bWall && Math.abs(this.m_vDirection[1]) < 0.15)
+                    {
+                        // prevent infinite X ball
+                        this.m_vDirection[1] = -1.0*Signf(this.m_vPosition[1]);
+                        vec2.normalize(this.m_vDirection, this.m_vDirection);
+                    }
+                }
+
+                // start bump-effect
+                if(bHit) g_pPaddle[i].m_fBump = 1.0;
             }
             else
             {
-                // increased range with shield attribute
-                vec2.set(cBall.s_vPrePaddleSize, C_PADDLE_SIZE[0]+(g_pPaddle[i].m_bShield ? 3.75 : 0.0), C_PADDLE_SIZE[1]);
+                // set paddle size
+                vec2.set(g_vVector, g_pPaddle[i].m_vSize[0]*3.75, C_PADDLE_RANGE);
 
-                if(this.m_vPosition[0] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[0] + cBall.s_vPrePaddleSize[iX] &&
-                   this.m_vPosition[0] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[0] - cBall.s_vPrePaddleSize[iX] &&
-                   this.m_vPosition[1] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[1] + cBall.s_vPrePaddleSize[iY] &&
-                   this.m_vPosition[1] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[1] - cBall.s_vPrePaddleSize[iY] &&
+                if(this.m_vPosition[0] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[0] + g_vVector[iX] &&
+                   this.m_vPosition[0] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[0] - g_vVector[iX] &&
+                   this.m_vPosition[1] - C_BALL_SIZE < g_pPaddle[i].m_vPosition[1] + g_vVector[iY] &&
+                   this.m_vPosition[1] + C_BALL_SIZE > g_pPaddle[i].m_vPosition[1] - g_vVector[iY] &&
                    vec2.dot(this.m_vDirection, g_pPaddle[i].m_vDirection) < 0.0)
                 {
+                    this.m_iHitPaddle = i+1;
+
                     // calculate position-difference with old position
                     var vDiff = cBall.s_vPreDiff;
                     vec2.sub(vDiff, cBall.s_vPreOldPos, g_pPaddle[i].m_vPosition);
@@ -471,14 +502,16 @@ cBall.CreateBall = function(vPosition, vDirection, bFirst)
         if(!g_pBall[i].m_bActive)
         {
             // activate and init new ball
-            g_pBall[i].m_fSpeed  = 40.0 + g_iLevel*0.5;
             g_pBall[i].m_bActive = true;
             vec2.set(g_pBall[i].m_vPosition,  vPosition[0],  vPosition[1]);
             vec2.normalize(g_pBall[i].m_vDirection, vDirection);
 
             // hide him on start
-            g_pBall[i].m_fAlpha = bFirst ? 0.0 : 1.0;
+            g_pBall[i].m_fAlpha = bFirst ? 0.0 : 0.9;
             mat4.scale(g_pBall[i].m_mTransform, g_pBall[i].m_mTransform, [0.0, 0.0, 0.0]);
+
+            // reset camera acceleration
+            g_fCamAcc = 0.3;
 
             return;
         }

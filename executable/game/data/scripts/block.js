@@ -213,7 +213,7 @@ cBlock.s_sFragmentShader =
 "    fIntensity *= dot(normalize(v_v3Normal), v3Light)*0.5+0.5;"                                            +
 "    fIntensity  = min(fIntensity, 1.8);"                                                                   +
 ""                                                                                                          +
-"    if(u_iType != 0)"                                                                                      +
+"    if(u_iType != 0)"                                                                                      + // still faster than a texture
 "    {"                                                                                                     +
 "        if(u_iType == 1) {if(v_v3NormalTrue.z > 0.99)                                 fIntensity *= 0.2;}" +
 "                    else {if(v_v3NormalTrue.z > 0.92 && abs(v_v3NormalTrue.y) < 0.05) fIntensity *= 0.2;}" +
@@ -223,6 +223,7 @@ cBlock.s_sFragmentShader =
 "}";
 
 var C_BLOCK_SIZE     = 1.3;
+var C_BLOCK_DIST     = 3.0;
 var C_BLOCK_BALL_OFF = C_BLOCK_SIZE+C_BALL_SIZE;
 
 
@@ -286,6 +287,7 @@ function cBlock()
 
     this.m_bActive    = false;
     this.m_bFlying    = true;
+    this.m_fHealth    = 0.0;
 }
 
 
@@ -371,9 +373,39 @@ cBlock.prototype.UpdateTransform = function()
     mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
 };
 
+cBlock.prototype.UpdateTransformRotated = function(fAngle)
+{
+    // update transformation matrix
+    mat4.identity(this.m_mTransform);
+    mat4.rotateZ(this.m_mTransform, this.m_mTransform, fAngle);
+    mat4.scale(this.m_mTransform, this.m_mTransform, [2.1, 2.1, 2.0]);
+    mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
+};
+
 
 // ****************************************************************
-cBlock.prototype.Throw = function(vDirection)
+cBlock.prototype.Activate = function()
+{
+    this.m_vColor[3] = 1.0;
+    this.m_bActive   = true;
+    this.m_bFlying   = false;
+};
+
+
+// ****************************************************************
+cBlock.prototype.Reset = function()
+{
+    vec3.set(this.m_vPosition, 0.0, 0.0, 1.0);
+    mat3.identity(this.m_mNormal);
+
+    vec3.set(this.m_vFlyDir,  0.0, 0.0, 0.0);
+    vec3.set(this.m_vFlyAxis, 0.0, 0.0, 0.0);
+    this.m_fFlyTime = 0.0;
+};
+
+
+// ****************************************************************
+cBlock.prototype.Throw = function(vDirection, fHeight)
 {
     // set block flying
     this.m_bFlying = true;
@@ -381,7 +413,7 @@ cBlock.prototype.Throw = function(vDirection)
     // kick block away
     this.m_vFlyDir[0] = vDirection[0]*70.0;
     this.m_vFlyDir[1] = vDirection[1]*70.0;
-    this.m_vFlyDir[2] = 30.0;
+    this.m_vFlyDir[2] = fHeight;
 
     // spin block randomly
     vec3.random(this.m_vFlyAxis);
@@ -389,8 +421,19 @@ cBlock.prototype.Throw = function(vDirection)
 
 
 // ****************************************************************
-cBlock.prototype.Activate = function()
+cBlock.prototype.IsHit = function()
 {
-    this.m_bActive = true;
-    this.m_bFlying = false;
+    return this.m_bFlying && this.m_bActive;
+};
+
+
+// ****************************************************************
+cBlock.IsHitAny = function(iFrom, iTo)
+{
+    for(var i = iFrom; i < iTo; ++i)
+    {
+        if(g_pBlock[i].IsHit())
+            return true;
+    }
+    return false;
 };
