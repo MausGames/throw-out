@@ -44,7 +44,7 @@ cLevel.s_avBlockPos = function()
     return avOutput;
 }();
 
-cLevel.s_aiStatus = new Array(10);   // some status attributes for level-specific functions (resetet to 0 on level start)
+cLevel.s_aiStatus = new Float32Array(10);   // some status attributes for level-specific functions (resetet to 0 on level start)
 
 
 // ****************************************************************
@@ -340,9 +340,6 @@ cLevel.s_apFunction[LVL] = function()
 {
     var fTime = g_fTime*2.0;
 
-    // activate full interface
-    if(!g_iActiveTime) g_iActiveTime = 1;
-
     // start effect after hitting a block
     if(cLevel.s_aiStatus[0])
     {
@@ -397,7 +394,13 @@ cLevel.s_apFunction[LVL] = function()
 
         // check for hit block
         if(cBlock.IsHitAny(0, C_LEVEL_CENTER))
+        {
             cLevel.s_aiStatus[0] = 1;
+
+            // activate full interface
+            if(!g_iActiveTime)  g_iActiveTime  = 1;
+            if(!g_iActiveMulti) g_iActiveMulti = 1;
+        }
     }
 };
 cLevel.s_apExit[LVL] = function() {};
@@ -578,7 +581,7 @@ cLevel.s_apExit[LVL] = function() {};
 
 // ****************************************************************
 // ### INVISIBLE BLOCKS 3 ###
-LVL = 0;
+LVL = 1;
 
 cLevel.s_aavColor[LVL] =
 [vec3.fromValues( 10.0/255.0,  10.0/255.0,  10.0/255.0),
@@ -661,7 +664,7 @@ cLevel.s_apExit[LVL] = function()
 
 // ****************************************************************
 // ### COLORED LINES 2 ###
-LVL = 0;
+LVL = 1;
 
 cLevel.s_aavColor[LVL] =
 [vec3.fromValues(255.0/255.0, 100.0/255.0, 100.0/255.0),
@@ -844,7 +847,7 @@ cLevel.s_aabPaddle[LVL] =
 [0, 0, 1, 1];
 
 cLevel.s_avBallDir[LVL] =
-[-0.000, 0.707];
+[0.0, 1.0];
 
 cLevel.s_asText[LVL] = "";
 
@@ -1015,7 +1018,7 @@ cLevel.s_apFunction[LVL] = function()
         mat4.identity(g_mMatrix);
         mat4.rotateZ(g_mMatrix, g_mMatrix, cLevel.s_aiStatus[0]*0.3);
 
-        var fHeight = Math.min((cLevel.s_aiStatus[0]-1.0)*0.3-1.5, 1.05);
+        var fHeight = Math.min((cLevel.s_aiStatus[0]-1.0)*0.3-1.5, 1.0);
         for(var i = C_LEVEL_X*4; i < C_LEVEL_X*7; ++i)
         {
             if(g_pBlock[i].m_bFlying) continue;
@@ -1070,7 +1073,7 @@ cLevel.s_apFunction[LVL] = function()
         if(cLevel.s_aiStatus[3] >= 100.0) cLevel.s_aiStatus[3] = 0.0;
 
         var fDepth  = g_vWall[1] - vLine[1] - cLevel.s_aiStatus[3];
-        var fHeight = Math.min((cLevel.s_aiStatus[3]-1.0)*0.3-1.5, 1.05);
+        var fHeight = Math.min((cLevel.s_aiStatus[3]-1.0)*0.3-1.5, 1.0);
         for(var i = C_LEVEL_X*8; i < C_LEVEL_X*9; ++i)
         {
             if(g_pBlock[i].m_bFlying) continue;
@@ -1141,7 +1144,7 @@ cLevel.s_apFunction[LVL] = function()
                 // set position and update transformation rotated
                 g_pBlock[i].m_vPosition[0] += g_vVector[0] * fTime * cLevel.s_aiStatus[5];
                 g_pBlock[i].m_vPosition[1] += g_vVector[1] * fTime;
-                g_pBlock[i].m_vPosition[2] = Math.min(fValue*0.3-1.5, 1.05);
+                g_pBlock[i].m_vPosition[2] = Math.min(fValue*0.3-1.5, 1.0);
                 g_pBlock[i].UpdateTransformRotated(g_vVector[0]*cLevel.s_aiStatus[5]);
             }
             else
@@ -1183,11 +1186,11 @@ cLevel.s_apExit[LVL] = function()
 
 // ****************************************************************
 // ### DOUBLE BALL 3 ###
-LVL = 0;
+LVL = 1;
 
 cLevel.s_aavColor[LVL] =
-[vec3.fromValues(240.0/255.0,     219.0/255.0,       8.0/255.0),
- vec3.fromValues(240.0/255.0*0.7, 219.0/255.0*0.7,   8.0/255.0*0.7)];
+[vec3.fromValues(240.0/255.0*1.05,     219.0/255.0*1.05,       8.0/255.0*1.05),
+ vec3.fromValues(240.0/255.0*1.05*0.7, 219.0/255.0*1.05*0.7,   8.0/255.0*1.05*0.7)];
 
 cLevel.s_aaiValue[LVL] =
 [0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -1255,7 +1258,7 @@ cLevel.s_apFunction[LVL] = function()
         if(cLevel.s_aiStatus[i] !== pA.m_vDirection[iDir])
         {
             // save and apply inverse direction to other ball
-            cLevel.s_aiStatus[i]  = pA.m_vDirection[iDir];
+            cLevel.s_aiStatus[i]  =  pA.m_vDirection[iDir];
             pB.m_vDirection[iDir] = -pA.m_vDirection[iDir];
 
             // synchronize position of both balls
@@ -1268,30 +1271,30 @@ cLevel.s_apExit[LVL] = function() {};
 
 
 // ****************************************************************
-// ### AROUND AND AROUND ? ###
-LVL = 0;
+// ### AROUND AND AROUND 3 ###
+LVL = 1;
 
 cLevel.s_aavColor[LVL] =
-[vec3.fromValues(140.0/255.0, 159.0/255.0,   8.0/255.0),
- vec3.fromValues(193.0/255.0, 218.0/255.0,  11.0/255.0),
- vec3.fromValues(255.0/255.0, 255.0/255.0, 255.0/255.0)];
+[vec3.fromValues(240.0/255.0*1.1, 219.0/255.0*1.1,   8.0/255.0*1.1),
+ vec3.fromValues(245.0/255.0,       1.0/255.0,       0.0/255.0),
+ vec3.fromValues(255.0/255.0,     255.0/255.0,     255.0/255.0)];
 
 cLevel.s_aaiValue[LVL] =
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // ^ outer
- 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0, // v inner
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // ^ outer
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1, // v inner
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 3, 3,  3, 3, 0, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 3, 3, 2,  2, 3, 3, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 3, 3, 2, 2,  2, 2, 3, 3, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 3, 2, 2, 1,  1, 2, 2, 3, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 3,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
 
- 0, 0, 0, 0, 0, 0, 3, 2, 2, 1,  1, 2, 2, 3, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 3, 3, 2, 2,  2, 2, 3, 3, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 3, 3, 2,  2, 3, 3, 0, 0, 0, 0, 0, 0, 0,
- 0, 0, 0, 0, 0, 0, 0, 0, 3, 3,  3, 3, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
@@ -1300,10 +1303,399 @@ cLevel.s_aaiValue[LVL] =
  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
 
 cLevel.s_aaiTyped[LVL] =
-[{iAll : 2}];
+[{iX :  9, iY :  9, iType : 1},
+ {iX : 19, iY :  4, iType : 2}];
 
 cLevel.s_aabPaddle[LVL] =
-[1, 0, 0, 0];
+[0, 0, 1, 1];
+
+cLevel.s_avBallDir[LVL] =
+[0.707, 0.707];
+
+cLevel.s_asText[LVL] = "";
+
+var g_mRotaStep = null;   // additional matrix reference
+cLevel.s_apInit[LVL] = function()
+{
+    // set values for the paddle rotation
+    cLevel.s_aiStatus[1] = 0;
+    cLevel.s_aiStatus[3] = 0;
+    cLevel.s_aiStatus[4] = 2;
+    cLevel.s_aiStatus[5] = 1;
+    cLevel.s_aiStatus[6] = 3;
+
+    // center the centered block
+    vec2.set(g_pBlock[9*C_LEVEL_X+9].m_vPosition, 0.0, 0.0);
+
+    // calculate colors (instead of doing a normal look-up)
+    var vColor1 = cLevel.s_aavColor[g_iLevel][0];
+    var vColor2 = cLevel.s_aavColor[g_iLevel][1];
+    for(var i = 0; i < 5; ++i)
+    {
+        var fStr1 = (i/4);
+        var fStr2 = 1.0-fStr1;
+
+        for(var j = 0; j < C_LEVEL_X; ++j)
+        {
+            var pBlock = g_pBlock[i*C_LEVEL_X+j];
+
+            pBlock.m_vColor[0] = vColor1[0] * fStr1 + vColor2[0] * fStr2;
+            pBlock.m_vColor[1] = vColor1[1] * fStr1 + vColor2[1] * fStr2;
+            pBlock.m_vColor[2] = vColor1[2] * fStr1 + vColor2[2] * fStr2;
+        }
+    }
+
+    // set rotation-step-matrix (to rotate position vector step-by-step)
+    g_mRotaStep = g_pBlock[202].m_mTransform;
+    mat4.identity(g_mRotaStep);
+    mat4.rotateZ(g_mRotaStep, g_mRotaStep, Math.PI*2.0/C_LEVEL_X);
+
+    // increase transition time
+    cLevel.s_aiStatus[7] = C_TRANSITION_END;
+    C_TRANSITION_END = 7.0;
+};
+cLevel.s_apFunction[LVL] = function()
+{
+    // update time to rotate the paddles
+    var fCur = cLevel.s_aiStatus[0];
+    cLevel.s_aiStatus[0] = (cLevel.s_aiStatus[0] + g_fTime) % 5.0;
+
+    if(cLevel.s_aiStatus[0] < fCur)
+    {
+        // define new paddles
+        cLevel.s_aiStatus[1] = (cLevel.s_aiStatus[1] + 1) % 4;
+
+        // reset to wall-status and activate new paddles
+        for(var i = 0; i < 4; ++i) g_pPaddle[i].m_bWall = true;
+        g_pPaddle[cLevel.s_aiStatus[3+ cLevel.s_aiStatus[1]     ]].m_bWall = false;
+        g_pPaddle[cLevel.s_aiStatus[3+(cLevel.s_aiStatus[1]+2)%4]].m_bWall = false;
+    }
+
+    // misuse matrices from blocks
+    var mMatrix1 = g_pBlock[200].m_mTransform;
+    var mMatrix2 = g_pBlock[201].m_mTransform;
+    var fTime    = (g_fLevelTime+5.0)*0.5;
+
+    // calculate basic rotation matrices in both directions
+    mat4.identity(mMatrix1);
+    mat4.rotateZ(mMatrix1, mMatrix1, fTime);
+    
+    mat4.identity(mMatrix2);
+    mat4.rotateZ(mMatrix2, mMatrix2, -fTime);
+
+    // transform all relevant blocks
+    var fStep  = Math.PI*2.0/C_LEVEL_X;
+    var fIntro = Clamp(g_fLevelTime-0.5, 0.0, 1.0);
+    for(var i = 0; i < 5; ++i)
+    {
+        // set initial vector to rotate around
+        vec2.transformMat4(g_vVector, [0.0, (1.0+i)*5.0], (i%2) ? mMatrix1 : mMatrix2);
+
+        var fRota = (i%2 ? g_fLevelTime : -g_fLevelTime)*0.5;
+        for(var j = 0; j < C_LEVEL_X; ++j)
+        {
+            // rotate vector around center
+            vec2.transformMat4(g_vVector, g_vVector, g_mRotaStep);
+
+            // get and check block status
+            var pBlock = g_pBlock[i*C_LEVEL_X+j];
+            if(pBlock.m_bFlying) continue;
+            
+            // set position and update transformation rotated
+            vec2.copy(pBlock.m_vPosition, g_vVector);
+            pBlock.UpdateTransformRotated((fRota + fStep*(((i%2) ? 0 : 2)+j))*fIntro);
+        }
+    }
+};
+cLevel.s_apExit[LVL] = function()
+{
+    // reset transition time
+    C_TRANSITION_END = cLevel.s_aiStatus[7];
+};
+
+
+// ****************************************************************
+// ### MOVING BLOCKS 3 ###
+LVL = 1;
+
+cLevel.s_aavColor[LVL] =
+[vec3.fromValues(216.0/255.0,   6.0/255.0,   6.0/255.0),
+ vec3.fromValues(110.0/255.0, 102.0/255.0,   0.0/255.0),
+ vec3.fromValues(247.0/255.0, 170.0/255.0,   0.0/255.0)];
+
+cLevel.s_aaiValue[LVL] =
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 1, 1, 1,  1, 1, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 1, 1, 1, 1,  1, 1, 1, 1, 1, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 2, 2, 2, 3,  3, 2, 3, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 2, 3, 2, 3, 3,  3, 2, 3, 3, 3, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 2, 3, 2, 2, 3,  3, 3, 2, 3, 3, 3, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 2, 2, 3, 3, 3,  3, 2, 2, 2, 2, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 3, 3, 3,  3, 3, 3, 3, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 2, 2, 1, 2,  2, 2, 2, 0, 0, 0, 0, 0, 0, 0,
+
+ 0, 0, 0, 0, 0, 2, 2, 2, 1, 2,  2, 1, 2, 2, 2, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 2, 2, 2, 2, 1, 1,  1, 1, 2, 2, 2, 2, 0, 0, 0, 0,
+ 0, 0, 0, 0, 3, 3, 2, 1, 3, 1,  1, 3, 1, 2, 3, 3, 0, 0, 0, 0,
+ 0, 0, 0, 0, 3, 3, 3, 1, 1, 1,  1, 1, 1, 3, 3, 3, 0, 0, 0, 0,
+ 0, 0, 0, 0, 3, 3, 1, 1, 1, 1,  1, 1, 1, 1, 3, 3, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 1, 1, 1, 0,  0, 1, 1, 1, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 2, 2, 2, 0, 0,  0, 0, 2, 2, 2, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 2, 2, 2, 2, 0, 0,  0, 0, 2, 2, 2, 2, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+cLevel.s_aaiTyped[LVL] =
+[{iX : 15, iY :  6, iType : 1}];
+
+cLevel.s_aabPaddle[LVL] =
+[1, 1, 0, 0];
+
+cLevel.s_avBallDir[LVL] =
+[0.0, 1.0];
+
+cLevel.s_asText[LVL] = "";
+
+cLevel.s_apInit[LVL] = function() {};
+cLevel.s_apFunction[LVL] = function()
+{
+    var fDecrease = 1.0-g_fTime*4.0;
+    var fPush     = g_fTime*2.0;
+
+    for(var i = 0; i < C_LEVEL_CENTER; ++i)
+    {
+        // check if block was hit
+        var pBlock = g_pBlock[i];
+        if(pBlock.IsHit())
+        {
+            var bHit = false;
+            for(var k = 0; k < 2; ++k)
+            {
+                // check which ball hit the block
+                if(g_pBall[k].m_iHitBlock !== i+1) continue;
+                bHit = true;
+
+                for(var j = 0; j < C_LEVEL_CENTER; ++j)
+                {
+                    var pOther = g_pBlock[j];
+                    if(pOther.m_bFlying) continue;
+
+                    // calculate difference between block and ball
+                    vec2.sub(pOther.m_vFlyDir, pOther.m_vPosition, g_pBall[k].m_vPosition);
+
+                    // apply push effect to block (save in fly direction)
+                    var fLen  = vec2.length(pOther.m_vFlyDir);
+                    var fDist = Math.max(20.0 - fLen, 0.0)*1.5 / fLen;   // divide by length to normalize pOther.m_vFlyDir
+                    pOther.m_vFlyDir[0] *= fDist;
+                    pOther.m_vFlyDir[1] *= fDist;
+                }
+            }
+            if(bHit) break;
+        }
+    }
+    
+    for(var i = 0; i < C_LEVEL_CENTER; ++i)
+    {
+        var pBlock = g_pBlock[i];
+        if(pBlock.m_bFlying) continue;
+
+        // update push effect
+        if(pBlock.m_vFlyDir[0] || pBlock.m_vFlyDir[1])
+        {
+            // move block with push vector
+            pBlock.m_vPosition[0] += pBlock.m_vFlyDir[0] * g_fTime;
+            pBlock.m_vPosition[1] += pBlock.m_vFlyDir[1] * g_fTime;
+
+            // decrease push strength over time
+            pBlock.m_vFlyDir[0] *= (Math.abs(pBlock.m_vFlyDir[0]) < 0.01) ? 0.0 : fDecrease;
+            pBlock.m_vFlyDir[1] *= (Math.abs(pBlock.m_vFlyDir[1]) < 0.01) ? 0.0 : fDecrease;
+        }
+
+        // push current block and other blocks apart (# not best algo, but efficient enough)
+        for(var j = 0; j < C_LEVEL_CENTER; ++j)
+        {
+            var pOther = g_pBlock[j];
+            if(pOther.m_bFlying) continue;
+
+            // don't compare same block
+            if(i === j) continue;
+
+            // calculate difference between both blocks
+            vec2.sub(g_vVector, pBlock.m_vPosition, pOther.m_vPosition);
+
+            // check for intersection
+            if(Math.abs(g_vVector[0]) < C_BLOCK_DIST &&
+               Math.abs(g_vVector[1]) < C_BLOCK_DIST)
+            {
+                vec2.normalize(g_vVector, g_vVector);
+                g_vVector[0] *= fPush;
+                g_vVector[1] *= fPush;
+
+                // push both blocks apart (= best result)
+                vec2.add(pBlock.m_vPosition, pBlock.m_vPosition, g_vVector);
+                vec2.sub(pOther.m_vPosition, pOther.m_vPosition, g_vVector);
+            }
+        }
+
+        // reflect and clamp block on imaginary wall
+        for(var j = 0; j < 2; ++j)
+        {
+            if(pBlock.m_vPosition[j] < -30.0)
+            {
+                if(pBlock.m_vFlyDir[j] < 0.0) pBlock.m_vFlyDir[j] = Math.abs(pBlock.m_vFlyDir[j]);
+                pBlock.m_vPosition[j] = -30.0;
+            }
+            else if(pBlock.m_vPosition[j] > 30.0)
+            {
+                if(pBlock.m_vFlyDir[j] > 0.0) pBlock.m_vFlyDir[j] = -Math.abs(pBlock.m_vFlyDir[j]);
+                pBlock.m_vPosition[j] = 30.0;
+            }
+        }
+
+        // update transformation
+        pBlock.UpdateTransform();
+    }
+};
+cLevel.s_apExit[LVL] = function() {};
+
+
+// ****************************************************************
+// ### TELEPORTER 4 ###
+LVL = 0;
+
+cLevel.s_aavColor[LVL] =
+[vec3.fromValues(193.0/255.0,      218.0/255.0,       11.0/255.0),
+ vec3.fromValues(240.0/255.0*1.05, 219.0/255.0*1.05,   8.0/255.0*1.05)];
+
+cLevel.s_aaiValue[LVL] =
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,  0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+ 0, 0, 0, 1, 1, 0, 0, 1, 1, 0,  0, 1, 1, 0, 0, 1, 1, 0, 0, 0,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 0, 0, 0, 1, 1, 0, 0, 1, 1, 0,  0, 1, 1, 0, 0, 1, 1, 0, 0, 0,
+ 0, 0, 0, 1, 0, 0, 0, 1, 0, 0,  0, 0, 1, 0, 0, 0, 1, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+ 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0];
+
+cLevel.s_aaiTyped[LVL] =
+[];
+
+cLevel.s_aabPaddle[LVL] =
+[1, 1, 0, 0];
+
+cLevel.s_avBallDir[LVL] =
+[0.0, 1.0];
+
+cLevel.s_asText[LVL] = "";
+
+cLevel.s_apInit[LVL] = function()
+{
+    // activate teleport appearance on all paddles
+    for(var i = 0; i < 4; ++i)
+        g_pPaddle[i].m_bTeleporter = true;
+
+    // create a little space between the blocks
+    for(var i = 0; i < C_LEVEL_CENTER; ++i)
+    {
+        if(g_pBlock[i].m_bFlying) continue;
+        g_pBlock[i].m_vPosition[0] += Signf(g_pBlock[i].m_vPosition[0])*0.8;
+    }
+};
+cLevel.s_apFunction[LVL] = function()
+{
+    // teleport the ball on paddle and wall collision
+    for(var i = 0; i < 4; ++i)
+    {
+        if(g_pBall[0].m_iHitPaddle === i+1)
+        {
+            var iX   = (i < 2) ?  1   : 0;
+            var fSig = (i % 2) ? -1.0 : 1.0;
+
+            // set ball to new position and overload direction
+            g_pBall[0].m_vPosition[iX]  =  fSig*32.5;
+            g_pBall[0].m_vDirection[iX] = -fSig*Math.abs(g_pBall[0].m_vDirection[iX]);
+
+            // reset camera acceleration
+            g_fCamAcc = (i < 2) ? 0.0 : 0.08;
+        }
+    }
+
+    // animate the color of all blocks
+    var vColor1 = cLevel.s_aavColor[g_iLevel][0];
+    var vColor2 = cLevel.s_aavColor[g_iLevel][1];
+    for(var i = 0; i < C_LEVEL_CENTER; ++i)
+    {
+        if(g_pBlock[i].m_bFlying) continue;
+
+        // set the interpolation value as positioned sinus wave
+        var fFract = Math.sin(g_fLevelTime*5.0 + Math.abs(g_pBlock[i].m_vPosition[0])*0.3333)*0.5+0.5;
+        var fFractInv = 1.0-fFract;
+
+        // calculate the new color
+        g_pBlock[i].m_vColor[0] = vColor1[0]*fFractInv + vColor2[0]*fFract;
+        g_pBlock[i].m_vColor[1] = vColor1[1]*fFractInv + vColor2[1]*fFract;
+        g_pBlock[i].m_vColor[2] = vColor1[2]*fFractInv + vColor2[2]*fFract;
+    }
+};
+cLevel.s_apExit[LVL] = function()
+{
+    // deactivate teleport appearance on all paddles
+    for(var i = 0; i < 4; ++i)
+        g_pPaddle[i].m_bTeleporter = false;
+};
+
+
+// ****************************************************************
+// ### CREATION  ###
+LVL = 0;
+
+cLevel.s_aavColor[LVL] =
+[vec3.fromValues(140.0/255.0, 159.0/255.0,   8.0/255.0),
+ vec3.fromValues(193.0/255.0, 218.0/255.0,  11.0/255.0),
+ vec3.fromValues(255.0/255.0, 255.0/255.0, 255.0/255.0)];
+
+cLevel.s_aaiValue[LVL] =
+[1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
+ 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,  1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
+
+cLevel.s_aaiTyped[LVL] =
+[];
+
+cLevel.s_aabPaddle[LVL] =
+[0, 0, 1, 1];
 
 cLevel.s_avBallDir[LVL] =
 [-0.707, 0.707];
@@ -1312,30 +1704,43 @@ cLevel.s_asText[LVL] = "";
 
 cLevel.s_apInit[LVL] = function()
 {
-    cLevel.s_aiStatus[3] = 0;
-    cLevel.s_aiStatus[4] = 2;
-    cLevel.s_aiStatus[5] = 1;
-    cLevel.s_aiStatus[6] = 3;
+//    for(var i = 0; i < C_LEVEL_X*6; ++i)
+//    {
+//        if(g_pBlock[i].m_bFlying) continue;
+//        g_pBlock[i].m_bActive = false;
+//    }
+
+    cLevel.s_aiStatus[0] = cLevel.s_avBallDir[g_iLevel][0];
+    cLevel.s_aiStatus[1] = cLevel.s_avBallDir[g_iLevel][1];
 };
 cLevel.s_apFunction[LVL] = function()
 {
-    var fCur = cLevel.s_aiStatus[0];
-    cLevel.s_aiStatus[0] = (cLevel.s_aiStatus[0] + g_fTime) % 6.0;
-
-    if(cLevel.s_aiStatus[0] < fCur)
+    if(g_pBall[0].m_iHitPaddle)
     {
-        cLevel.s_aiStatus[1] = (cLevel.s_aiStatus[1] + 1) % 4;
-        for(var i = 0; i < 4; ++i)
-            g_pPaddle[i].m_bWall = (cLevel.s_aiStatus[i+3] !== cLevel.s_aiStatus[1]);
+        cLevel.s_aiStatus[0] = g_pBall[0].m_vDirection[0];
+        cLevel.s_aiStatus[1] = g_pBall[0].m_vDirection[1];
+    }
+    
+
+
+    if(cBlock.IsHitAny(0, C_LEVEL_CENTER))
+    {
+        g_pBall[0].m_vDirection[0] = cLevel.s_aiStatus[0];
+        g_pBall[0].m_vDirection[1] = cLevel.s_aiStatus[1];
     }
 
-    
+
+    for(var i = 0; i < C_LEVEL_X*6; ++i)
+    {
+        if(g_pBlock[i].m_bFlying) continue;
+        g_pBlock[i].m_bActive = true;
+    }
 };
 cLevel.s_apExit[LVL] = function() {};
 
 
 // ****************************************************************
-// ### GAME JOLT 3 ###
+// ### GAME JOLT 0 ###
 LVL = 15;
 
 cLevel.s_aavColor[LVL] =
@@ -1407,3 +1812,9 @@ cLevel.s_apExit[LVL] = function()
 {
     ActivateFail();
 };
+
+
+// Other Ideas:
+// Destruction of block destroys other (invincible) blocks remotely
+// Snake-like block animation
+// Boss: indestructible life-bar on top (green -> red)
