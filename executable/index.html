@@ -2,7 +2,7 @@
 <html>
 
     <!--
-        For embedding as <iframe> - let the user decide when to load the actual game.
+        For embedding as fullscreen-enabled <iframe> - let the user decide when to load the actual game.
     -->
 
     <head>
@@ -20,7 +20,7 @@
         <script>
             function Init()
             {
-                // forward parameters
+                // forward URL parameters
                 var sAnd = window.location.search ? "&" : "?";
                 document.getElementById("play").href = "game/index.html" + window.location.search + sAnd + "launcher=1";
             }
@@ -28,7 +28,7 @@
 
     </head>
 
-    <body onload="Init()" style="background-color: #555555; margin: 0px; display: block; font-size: 100%;">
+    <body onload="Init()" style="background-color: black; margin: 0px; display: block; font-size: 100%;">
 
         <div class="middle" style="font: 2.6em square; top: 49.0%; width: 400px; height: 60px; margin: -30px 0 0 -200px; opacity: 1.0; pointer-events: auto;">
             <font class="header" onclick="this.innerHTML='Loading';"><a id="play" href="">Play</a></font>

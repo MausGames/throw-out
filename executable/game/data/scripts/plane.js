@@ -46,9 +46,8 @@ cPlane.s_sFragmentShader =
 "    vec3 v3Texel = vec3(1.0);"                                               +
 "    if(fMin > 25.0) v3Texel = texture2D(u_s2Texture, v_v2TexCoord).rgb;"     +
 ""                                                                            +
-"    float fIntensity = 40.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));" +
+"    float fIntensity = 59.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));" +
 "    fIntensity      *= dot(normalize(v_v3Relative), v3Camera);"              +
-"    fIntensity       = (fIntensity + 0.25)*1.05;"                            +
 ""                                                                            +
 "    float fValue = min(fMin*0.5 + 0.25, 1.0);"                               +
 ""                                                                            +
@@ -153,10 +152,4 @@ cPlane.prototype.Render = function()
     cPlane.s_pTexture.Enable();
     cPlane.s_pModel.Render();
     cPlane.s_pTexture.Disable();
-};
-
-
-// ****************************************************************
-cPlane.prototype.Move = function()
-{
 };

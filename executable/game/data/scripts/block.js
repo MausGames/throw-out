@@ -206,12 +206,12 @@ cBlock.s_sFragmentShader =
 "    const vec3 v3Camera = vec3(0.0, 0.447213650, -0.894427299);"                                           +
 "    const vec3 v3Light  = vec3(0.0,         0.0,          1.0);"                                           +
 ""                                                                                                          +
-"    float fIntensity = 40.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));"                               +
+"    float fIntensity = 60.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));"                               +
 "    fIntensity      *= dot(normalize(v_v3Relative), v3Camera);"                                            +
-"    fIntensity       = (fIntensity + 0.25)*1.1;"                                                           +
 ""                                                                                                          +
+"    fIntensity  = min(fIntensity, 1.5);"                                                                   +
 "    fIntensity *= dot(normalize(v_v3Normal), v3Light)*0.5+0.5;"                                            +
-"    fIntensity  = min(fIntensity, 1.8);"                                                                   +
+
 ""                                                                                                          +
 "    if(u_iType != 0)"                                                                                      + // still faster than a texture
 "    {"                                                                                                     +
@@ -239,14 +239,17 @@ cBlock.s_mSaveNormal = mat3.create();
 cBlock.s_vSaveColor  = vec4.create();
 cBlock.s_iSaveType   = 0;
 
+// size vector
+cBlock.s_vSize = vec3.fromValues(2.1, 2.1, 2.0);
+
 
 // ****************************************************************
 cBlock.Init = function(bHigh)
 {
     // define model
     if(cBlock.s_pModel !== null) cBlock.s_pModel.Clear();
-    if(bHigh) cBlock.s_pModel  = new cModel(cBlock.s_afVertexData,    cBlock.s_aiIndexData);
-         else cBlock.s_pModel  = new cModel(cBlock.s_afVertexDataLow, cBlock.s_aiIndexDataLow);
+    if(bHigh) cBlock.s_pModel = new cModel(cBlock.s_afVertexData,    cBlock.s_aiIndexData);
+         else cBlock.s_pModel = new cModel(cBlock.s_afVertexDataLow, cBlock.s_aiIndexDataLow);
 
     // define shader-program
     if(cBlock.s_pShader === null)
@@ -369,7 +372,7 @@ cBlock.prototype.UpdateTransform = function()
 {
     // update transformation matrix
     mat4.identity(this.m_mTransform);
-    mat4.scale(this.m_mTransform, this.m_mTransform, [2.1, 2.1, 2.0]);
+    mat4.scale(this.m_mTransform, this.m_mTransform, cBlock.s_vSize);
     mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
 };
 
@@ -378,7 +381,7 @@ cBlock.prototype.UpdateTransformRotated = function(fAngle)
     // update transformation matrix
     mat4.identity(this.m_mTransform);
     mat4.rotateZ(this.m_mTransform, this.m_mTransform, fAngle);
-    mat4.scale(this.m_mTransform, this.m_mTransform, [2.1, 2.1, 2.0]);
+    mat4.scale(this.m_mTransform, this.m_mTransform, cBlock.s_vSize);
     mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
 };
 
@@ -423,7 +426,9 @@ cBlock.prototype.Throw = function(vDirection, fHeight)
 // ****************************************************************
 cBlock.prototype.IsHit = function()
 {
-    return this.m_bFlying && this.m_bActive;
+    var bHit = this.m_bFlying && this.m_bActive && (this.m_fHealth < 0.0);
+    this.m_fHealth = Math.max(this.m_fHealth, 0.0);
+    return bHit;
 };
 
 

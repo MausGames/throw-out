@@ -270,12 +270,10 @@ cPaddle.s_sFragmentShader =
 "    const vec3 v3Camera = vec3(0.0, 0.447213650, -0.894427299);"             +
 "    const vec3 v3Light  = vec3(0.0,         0.0,          1.0);"             +
 ""                                                                            +
-"    float fIntensity = 40.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));" +
+"    float fIntensity = 52.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));" +
 "    fIntensity      *= dot(normalize(v_v3Relative), v3Camera);"              +
-"    fIntensity       = (fIntensity + 0.25)*1.1;"                             +
 ""                                                                            +
 "    fIntensity *= dot(normalize(v_v3Normal), v3Light)*0.5+0.5;"              +
-"    fIntensity *= 0.8;"                                                      +
 ""                                                                            +
 "    gl_FragColor = vec4(u_v4Color*fIntensity, 1.0);"                         +
 "}";
@@ -327,15 +325,16 @@ cPaddle.Exit = function()
 function cPaddle(vDirection)
 {
     // create attributes
-    this.m_vPosition  = vec3.fromValues(0.0, 0.0, 1.25);
-    this.m_vDirection = vec3.fromValues(vDirection[0], vDirection[1], 0.0);
-    this.m_vSize      = vec2.create();
-    this.m_mTransform = mat4.create();
+    this.m_vPosition   = vec3.fromValues(0.0, 0.0, 1.25);
+    this.m_vDirection  = vec3.fromValues(vDirection[0], vDirection[1], 0.0);
+    this.m_vSize       = vec3.fromValues(0.0, 0.0, 1.2);
+    this.m_mTransform  = mat4.create();
 
-    this.m_vColor     = vec3.fromValues(1.0, 1.0, 1.0);
-    this.m_fBump      = 0.0;
-    this.m_bWall      = true;
-    this.m_bShield    = false;
+    this.m_vColor      = vec3.fromValues(1.0, 1.0, 1.0);
+    this.m_fBump       = 0.0;
+    this.m_bWall       = true;
+    this.m_bShield     = false;
+    this.m_bTeleporter = false;
 }
 
 
@@ -389,19 +388,20 @@ cPaddle.prototype.Move = function()
     // update bump-effect
     this.m_fBump = Math.max(this.m_fBump-fTime, 0.0);
 
-    // currently in strong resize (for visually ugly speed-problems when buming into a resizing paddle)
-    var bResize = (this.m_vSize[0] > 9.0 && this.m_bWall) || (this.m_vSize[0] < 2.7 && !this.m_bWall);
+    // currently not in strong resize (for visually ugly speed-problems when buming into a resizing paddle)
+    var bNoResize = (this.m_vSize[0] > 9.0 && this.m_bWall) || (this.m_vSize[0] < (this.m_bShield ? 2.7 : 1.7) && !this.m_bWall);
 
     // update size
     var fSpeed     = this.m_fBump ? g_fTime*30.0 : fTime;
-    var fGrowSpeed = bResize      ? fSpeed       : fTime;
-    this.m_vSize[0] += ((this.m_bWall ? 9.2  : (this.m_bShield ? 2.2 : 1.2)) - this.m_vSize[0] + 1.2 *(this.m_fBump*0.25)) * fGrowSpeed;
-    this.m_vSize[1] += (1.25                                                 - this.m_vSize[1] + 1.25*(this.m_fBump*0.30)) * fGrowSpeed;
+    var fGrowSpeed = bNoResize    ? fSpeed       : fTime;
+    this.m_vSize[0] += ((this.m_bWall ? 9.2  : (this.m_bShield ? 2.2 : 1.2)) - this.m_vSize[0] + this.m_fBump*0.300) * fGrowSpeed;
+    this.m_vSize[1] += (1.25                                                 - this.m_vSize[1] + this.m_fBump*0.375) * fGrowSpeed;
 
     // update color
     var fFactor = (this.m_bWall ? 0.7 : 1.0) + Math.max(this.m_fBump-0.4, 0.0)*0.7;
-    if(this.m_bShield) vec3.set(g_vVector, 0.757*fFactor*1.15, 0.855*fFactor*1.15, 0.043*fFactor*1.15);
-                  else vec3.set(g_vVector, 0.102*fFactor,      0.702*fFactor,      1.000*fFactor);
+     if(this.m_bTeleporter) vec3.set(g_vVector, 0.888*fFactor, 0.416*fFactor, 1.250*fFactor);
+    else if(this.m_bShield) vec3.set(g_vVector, 0.871*fFactor, 0.983*fFactor, 0.049*fFactor);
+                       else vec3.set(g_vVector, 0.102*fFactor, 0.702*fFactor, 1.000*fFactor);
 
     this.m_vColor[0] += (g_vVector[0] - this.m_vColor[0])*fSpeed;
     this.m_vColor[1] += (g_vVector[1] - this.m_vColor[1])*fSpeed;
@@ -410,6 +410,6 @@ cPaddle.prototype.Move = function()
     // update transformation matrix
     mat4.identity(this.m_mTransform);
     mat4.rotateZ(this.m_mTransform, this.m_mTransform, this.m_vDirection[0] ? Math.PI*0.5 : 0.0);
-    mat4.scale(this.m_mTransform, this.m_mTransform, [this.m_vSize[0], this.m_vSize[1], 1.2]);
+    mat4.scale(this.m_mTransform, this.m_mTransform, this.m_vSize);
     mat4.translate(this.m_mTransform, this.m_mTransform, this.m_vPosition);
 };

@@ -11,8 +11,8 @@ var C_BALLS        = 10;          // max number of balls
 var C_HIT_RANGE  = 30.0;          // block-affect range of the ball (impact radius)
 var C_HIT_INVERT = 1.0/30.0;      // inverted range
 
-var C_TRANSITION_START  = -3.0;   // start-value for level transition
-var C_TRANSITION_CHANGE = -1.0;   // point to apply visual changes (add paddles, remove shield)
+var C_TRANSITION_START  = -2.0;   // start-value for level transition
+var C_TRANSITION_CHANGE = -0.5;   // point to apply visual changes (add paddles, remove shield)
 var C_TRANSITION_LEVEL  =  0.0;   // point to load the level and reset border
 var C_TRANSITION_END    =  5.0;   // end-value for level transition
 
@@ -62,8 +62,8 @@ var IsExp = false;
 
 
 // ****************************************************************
-var g_pCanvas  = null;                // main canvas
-var g_pTexture = null;                // texture canvas
+var g_pCanvas  = null;                          // main canvas
+var g_pTexture = null;                          // texture canvas
 
 // menu elements
 var g_pMenuLogo    = null;
@@ -84,55 +84,62 @@ var g_pMenuSound   = null;
 var g_pMenuLevel   = null;
 var g_pMenuScore   = null;
 
-var g_mProjection = mat4.create();    // global projection matrix
-var g_mCamera     = mat4.create();    // global camera matrix
-var g_vView       = vec2.create();    // current postion and view of the camera
-var g_fCamAngle   = 0.0;              // azimuth of the camera
-var g_fCamAcc     = 1.0;              // camera move acceleration (to enable smoother targeting when creating new balls)
+// sound files
+var g_pAudioDust = null;
+var g_pAudioBump = null;
 
-var g_vMousePos = vec2.create();      // current position of the cursor [-V/2, V/2]
+var g_mProjection = mat4.create();              // global projection matrix
+var g_mCamera     = mat4.create();              // global camera matrix
+var g_vView       = vec2.clone(C_BALL_START);   // current postion and view of the camera
+var g_fCamAngle   = 0.0;                        // azimuth of the camera
+var g_fCamAcc     = 1.0;                        // camera move acceleration (to enable smoother targeting when creating new balls)
 
-var g_fSaveTime  = 0.0;               // saved time value to calculate last frame time
-var g_fTotalTime = 0.0;               // total time since start of the application
-var g_fTime      = 0.0;               // last frame time
-var g_fBlockTime = 0.0;               // own frame time for block-explosion on fail
-var g_fLevelTime = 0.0;               // total time since start of the current level (begins with negative full transition time for an intro-animation)
+var g_vMousePos   = vec2.create();              // current position of the cursor [-V/2, V/2]
+var g_fMouseRect  = vec2.create();              // transformed canvas-rect values required for mouse position calculations
+var g_fMouseRange = 0.0;                        // range factor
 
-var g_iStatus = C_STATUS_INTRO;       // application status
-var g_iLevel  = 0;                    // current level number
-var g_iScore  = 0;                    // current player score (handled as float)
+var g_fSaveTime  = 0.0;                         // saved time value to calculate last frame time
+var g_fTotalTime = 0.0;                         // total time since start of the application
+var g_fTime      = 0.0;                         // last frame time
+var g_fBlockTime = 0.0;                         // own frame time for block-explosion on fail
+var g_fLevelTime = 0.0;                         // total time since start of the current level (begins with negative full transition time for an intro-animation)
 
-var g_bDepthSort = false;             // render blocks depth-sorted
+var g_iStatus = C_STATUS_INTRO;                 // application status
+var g_iLevel  = 0;                              // current level number
+var g_iScore  = 0;                              // current player score (handled as float)
 
-var g_fFade       = 1.0;              // time for main menu fade-out and fail menu fade-in
-var g_fTransition = 0.0;              // time for level transitions
-var g_fFail       = 0.0;              // total time in fail menu
+var g_bDepthSort = false;                       // render blocks depth-sorted
 
-var g_fStatMulti   = 1.0;             // current score multiplier
-var g_fStatTime    = 0.0;             // total time since starting the game
-var g_iActiveMulti = 1;               // status of displaying the score multiplier (0 = off, 1 = ready, 2 = on)
-var g_iActiveTime  = 0;               // status of displaying the total time
+var g_fFade       = 1.0;                        // time for main menu fade-out and fail menu fade-in
+var g_fTransition = 0.0;                        // time for level transitions
+var g_fFail       = 0.0;                        // total time in fail menu
 
-var g_bQuality      = true;           // current quality level
-var g_bMusic        = true;           // current music status
-var g_bSound        = true;           // current sound status
-var g_bGameJolt     = false;          // logged in on Game Jolt
-var g_fGameJoltPing = 0.0;            // timer for Game Jolt user session ping
+var g_fStatMulti   = 1.0;                       // current score multiplier
+var g_fStatTime    = 0.0;                       // total time since starting the game
+var g_iActiveMulti = 0;                         // status of displaying the score multiplier (0 = off, 1 = ready, 2 = on)
+var g_iActiveTime  = 0;                         // status of displaying the total time
 
-var g_iRequestID = 0;                 // ID from requestAnimationFrame()
+var g_bQuality      = true;                     // current quality level
+var g_bMusic        = true;                     // current music status
+var g_bSound        = true;                     // current sound status
+var g_bGameJolt     = false;                    // logged in on Game Jolt
+var g_fGameJoltPing = 0.0;                      // timer for Game Jolt user session ping
 
-var g_mMatrix      = mat4.create();   // pre-allocated general purpose matrix
-var g_vVector      = vec4.create();   // pre-allocated general purpose vector
+var g_iRequestID = 0;                           // ID from requestAnimationFrame()
 
-var g_vWeightedPos = vec2.create();   // pre-allocated weighted position for camera calculation
-var g_vAveragePos  = vec2.create();   // pre-allocated average position for camera calculation
-var g_vCamPos      = vec3.create();   // pre-allocated camera position
-var g_vCamTar      = vec3.create();   // pre-allocated camera target
+var g_mMatrix      = mat4.create();             // pre-allocated general purpose matrix
+var g_vVector      = vec4.create();             // pre-allocated general purpose vector
 
-var g_pPlane  = null;                 // plane object
-var g_pPaddle = null;                 // paddle/wall object array
-var g_pBall   = null;                 // ball object array
-var g_pBlock  = null;                 // block object array
+var g_vWeightedPos = vec2.create();             // pre-allocated weighted position for camera calculation
+var g_vAveragePos  = vec2.create();             // pre-allocated average position for camera calculation
+var g_vCamPos      = vec3.create();             // pre-allocated camera position
+var g_vCamTar      = vec3.create();             // pre-allocated camera target
+
+var g_pBackground = null;
+var g_pPlane  = null;                           // plane object
+var g_pPaddle = null;                           // paddle/wall object array
+var g_pBall   = null;                           // ball object array
+var g_pBlock  = null;                           // block object array
 
 
 // ****************************************************************
@@ -154,6 +161,7 @@ function Init()
 
         if(!GL)
         {
+            // show error page
             document.body.style.background = "#FAFAFF";
             document.body.innerHTML = "<p style='font: bold 16px sans-serif; position: absolute; left: 50%; top: 49%; width: 400px; height: 140px; margin: -70px 0 0 -200px; text-align: center;'>" +
                                       "<img src='data/images/webgl_logo.png'/><br/>" +
@@ -166,15 +174,6 @@ function Init()
     // retrieve texture canvas and 2d context
     g_pTexture = document.getElementById("texture");
     TEX = g_pTexture.getContext("2d");
-    
-    // setup system components
-    SetupMenu();
-    SetupRefresh();
-    SetupInput();
-
-    // resize everything dynamically
-    document.body.onresize = Resize;
-    Resize();
 
     // enable depth testing
     GL.enable(GL.DEPTH_TEST);
@@ -201,14 +200,32 @@ function Init()
     GL.clearColor(0.333, 0.333, 0.333, 1.0);
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
-    // reset current camera view
-    g_vView[1] = C_BALL_START[1];
+    // setup system components
+    SetupMenu();
+    SetupRefresh();
+    SetupInput();
+
+    // resize everything dynamically
+    document.body.onresize = Resize;
+    Resize();
+
+    // init model class
+    cModel.Init();
+
+    // init sound class and sound files
+    cSound.Init();
+    g_pAudioDust = new cSound("data/sounds/bump.wav");
+    g_pAudioBump = new cSound("data/sounds/bump.wav");
 
     // init object interfaces
+    cBackground.Init();
     cPlane.Init(true);
     cPaddle.Init(true);
     cBall.Init();
     cBlock.Init(true);
+
+    // create background
+    g_pBackground = new cBackground();
 
     // create plane
     g_pPlane = new cPlane();
@@ -242,18 +259,19 @@ function Init()
 window.addEventListener("beforeunload", function()   // Exit()
 {
     if(!GL) return;
+
+    // close Game Jolt user session (may not work)
+    if(g_bGameJolt) GameJoltSessionClose();
     
     // cancel last animation frame
     window.cancelAnimationFrame(g_iRequestID);
-
+    
     // exit object interfaces
+    cBackground.Exit();
     cPlane.Exit();
     cPaddle.Exit();
     cBall.Exit();
     cBlock.Exit();
-
-    // close Game Jolt user session (may not work)
-    if(g_bGameJolt) GameJoltSessionClose();
 }, false);
 
 
@@ -270,8 +288,19 @@ function Render(iNewTime)
     else g_fTime = 0.85*g_fTime + 0.15*fNewTime;
     g_fTotalTime += g_fTime;
 
-    // clear the framebuffer
-    GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+    if(g_bQuality)
+    {
+        // clear only depthbuffer and render background
+        GL.clear(((g_pBackground < 1.0) ? 0 : GL.COLOR_BUFFER_BIT) | GL.DEPTH_BUFFER_BIT);
+        GL.disable(GL.DEPTH_TEST);
+        g_pBackground.Render();
+        GL.enable(GL.DEPTH_TEST);
+    }
+    else
+    {
+        // clear full framebuffer
+        GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+    }
 
     if(g_iStatus === C_STATUS_GAME)
     {
@@ -290,7 +319,7 @@ function Render(iNewTime)
             g_pBlock[i].Render();
     }
 
-    if(!g_bDepthSort && g_fTotalTime >= C_INTRO_BLOCKS)
+    if(!g_bDepthSort && g_fTotalTime >= C_INTRO_BLOCKS) // #1
     {
         // render inside blocks (reversed because of depth testing, index 0 is top-left)
         for(var i = C_LEVEL_CENTER-1; i >= 0; --i)
@@ -308,7 +337,7 @@ function Render(iNewTime)
             g_pBall[i].Render();
     }
 
-    if(g_bDepthSort && g_fTotalTime >= C_INTRO_BLOCKS)
+    if(g_bDepthSort && g_fTotalTime >= C_INTRO_BLOCKS) // #2
     {
         // render inside blocks (sorted and after plane and balls for transparency effects)
         for(var i = 0; i < C_LEVEL_CENTER; ++i)
@@ -326,7 +355,7 @@ function Move()
     var fCameraZ = 0.0;
 
     // update block time (own time because of block-explosion on fail)
-     g_fBlockTime = g_fTime * Math.max(1.0-g_fFail*2.0, 0.0);
+    g_fBlockTime = g_fTime * Math.max(1.0-g_fFail*2.0, 0.0);
 
     // update intro
     if(g_iStatus === C_STATUS_INTRO)
@@ -341,6 +370,9 @@ function Move()
         // control logo opacity
         var fLogoOpacity = Math.sin(Math.PI * Clamp((g_fTotalTime-1.0)*0.22, 0.0, 1.0));
         SetOpacity(g_pMenuLogo, fLogoOpacity);
+
+        // control background opacity
+        g_pBackground.m_fAlpha = Clamp((g_fTotalTime-5.5)*0.4, 0.0, 1.0);
 
         // control menu opacity and intro status
         var fMenuOpacity = Clamp((g_fTotalTime-7.5)*0.4, 0.0, 1.0);
@@ -433,9 +465,6 @@ function Move()
         for(var i = 0; i < C_LEVEL_CENTER; ++i)
             g_pBlock[i].Move();
     }
-
-    // move plane
-    g_pPlane.Move();
 
     // use ball-positions to define the camera
     var fMin = 1000.0;
@@ -552,7 +581,7 @@ function InTransition()
 function SetupRefresh()
 {
     var iLastTime = 0;
-    var asVendor  = ['moz', 'webkit', 'ms'];
+    var asVendor  = ['moz', 'webkit', 'ms', 'o'];
 
     // unify different animation functions
     for(var i = 0; i < asVendor.length && !window.requestAnimationFrame; ++i)
@@ -583,12 +612,9 @@ function SetupInput()
     // implement mouse event movement
     document.addEventListener('mousemove', function(pCursor)
     {
-        var oRect = g_pCanvas.getBoundingClientRect();
-
         // set mouse position relative to the canvas
-        var fRange = 1.0 / g_pCanvas.height;
-        g_vMousePos[0] = (pCursor.clientX - oRect.left - (oRect.right  - oRect.left)/2) * fRange;
-        g_vMousePos[1] = (pCursor.clientY - oRect.top  - (oRect.bottom - oRect.top )/2) * fRange;
+        g_vMousePos[0] = pCursor.clientX*g_fMouseRange - g_fMouseRect[0];
+        g_vMousePos[1] = pCursor.clientY*g_fMouseRange - g_fMouseRect[1];
 
         return true;
     }, false);
@@ -596,16 +622,13 @@ function SetupInput()
     // implement touch event movement
     document.addEventListener('touchmove', function(pEvent)
     {
-        var oRect = g_pCanvas.getBoundingClientRect();
-
         // get touch input
         pEvent.preventDefault();
         var pTouch = pEvent.touches[0];
 
         // set mouse position relative to the canvas
-        var fRange = 1.0 / g_pCanvas.height;
-        g_vMousePos[0] = (pTouch.pageX - oRect.left - (oRect.right  - oRect.left)/2) * fRange;
-        g_vMousePos[1] = (pTouch.pageY - oRect.top  - (oRect.bottom - oRect.top )/2) * fRange;
+        g_vMousePos[0] = pTouch.pageX*g_fMouseRange - g_fMouseRect[0];
+        g_vMousePos[1] = pTouch.pageY*g_fMouseRange - g_fMouseRect[1];
     }, false);
 
     // implement pause with any keyboard key
@@ -660,8 +683,8 @@ function SetupMenu()
         cBlock.Init(g_bQuality);
     };
 
-    // implement fullscreen button
-    g_pMenuFull.onmousedown = function()
+    // implement fullscreen button (# IE works only with click-event, not with onmousedown)
+    g_pMenuFull.addEventListener("click", function()
     {
         var pDoc = document.documentElement;
 
@@ -670,9 +693,9 @@ function SetupMenu()
         else if(pDoc.mozRequestFullScreen)    pDoc.mozRequestFullScreen();
         else if(pDoc.webkitRequestFullscreen) pDoc.webkitRequestFullscreen();
         else if(pDoc.msRequestFullscreen)     pDoc.msRequestFullscreen();
-    };
+    }, false);
 
-    // implement volume buttons (# I hope the effect is clear, had some troubles with bad range-element and unicode support)
+    // implement volume buttons (# hope the color-effect is clear, had some troubles with range-element and unicode support)
     g_pMenuMusic.onmousedown = function()
     {
         g_bMusic = !g_bMusic;
@@ -703,9 +726,9 @@ function SetupMenu()
 function Resize()
 {
     // resize canvas
-    g_pCanvas.width  = window.innerWidth  - (IsGJ ? 2 : 0);
-    g_pCanvas.height = window.innerHeight - (IsGJ ? 2 : 0);
-    if(IsGJ) g_pCanvas.style.marginTop = "1px";
+    g_pCanvas.width  = window.innerWidth  - (QueryString["launcher"]  ? 2 : 0);
+    g_pCanvas.height = window.innerHeight - (QueryString["launcher"]  ? 2 : 0);
+    if(QueryString["launcher"] ) g_pCanvas.style.marginTop = "1px";
 
     // resize font
     document.body.style.fontSize = (g_pCanvas.height/800.0)*100.0 + "%";
@@ -732,6 +755,12 @@ function Resize()
     // set viewport and projection matrix
     GL.viewport(0, 0, g_pCanvas.width, g_pCanvas.height);
     mat4.perspective(g_mProjection, Math.PI*0.35, g_pCanvas.width / g_pCanvas.height, 0.1, 1000.0);
+
+    // calculate mouse values
+    var oRect = g_pCanvas.getBoundingClientRect();
+    g_fMouseRange   = 1.0 / g_pCanvas.height;
+    g_fMouseRect[0] = (oRect.left + (oRect.right  - oRect.left)/2) * g_fMouseRange;
+    g_fMouseRect[1] = (oRect.top  + (oRect.bottom - oRect.top )/2) * g_fMouseRange;
 }
 
 
@@ -836,7 +865,7 @@ function ActivatePause(bPaused)
         g_pMenuStart.onmousedown = function() {ActivatePause(false);};
         g_pMenuEnd.onmousedown = function()
         {
-            var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location;
+            var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : "javascript:window.location.reload(false)";
             g_pMenuOption2.innerHTML = "<font id='end' class='button'><a href='" + sSkip + "'>Restart complete game ?</a></font>";
         };
 
@@ -873,7 +902,7 @@ function ActivateFail()
     if(g_bGameJolt) GameJoltScoreAdd();
 
     // set option elements and implement application restart and return
-    var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location;
+    var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : "javascript:window.location.reload(false)";
     g_pMenuOption1.innerHTML = "<font id='start' class='button'><a href='" + sSkip + "'>Restart</a></font>";
     g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (QueryString["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
 
@@ -894,6 +923,19 @@ function ActivateFail()
 
         g_pBlock[i].Throw(g_vVector, g_vVector[2]);
     }
+}
+
+
+// ****************************************************************
+function ReadFile(sURL)
+{
+    // create synchron request to read a file
+    var pRequest = new XMLHttpRequest();
+    pRequest.open("GET", sURL, false);
+    pRequest.send();
+
+    // return file content
+    return pRequest.response;
 }
 
 

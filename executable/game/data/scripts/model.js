@@ -6,6 +6,16 @@ cModel.s_iIndexFormat     = 0;
 
 
 // ****************************************************************
+cModel.Init = function()
+{
+    // enable attributes and set index format
+    cModel.s_iIndexFormat = IsExp ? GL.UNSIGNED_SHORT : GL.UNSIGNED_BYTE;
+    GL.enableVertexAttribArray(0);
+    GL.enableVertexAttribArray(1);
+};
+
+
+// ****************************************************************
 function cModel(afVertexData, aiIndexData)
 {
     // save size values
@@ -24,11 +34,6 @@ function cModel(afVertexData, aiIndexData)
 
     // reset current vertex buffer
     cModel.s_iCurVertexBuffer = 0;
-
-    // enable attributes and set index format (# every time without general init)
-    cModel.s_iIndexFormat = IsExp ? GL.UNSIGNED_SHORT : GL.UNSIGNED_BYTE;
-    GL.enableVertexAttribArray(0);
-    GL.enableVertexAttribArray(1);
 }
 
 
