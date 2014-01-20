@@ -1,3 +1,11 @@
+////////////////////////////////////////////////////
+//*----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at) |//
+//*----------------------------------------------*//
+//| Released under the zlib License              |//
+//| More information available in the README.md  |//
+//*----------------------------------------------*//
+////////////////////////////////////////////////////
 
 
 // ****************************************************************
@@ -44,7 +52,7 @@ cPlane.s_sFragmentShader =
 "    float fMin    = min(v2Border.x, v2Border.y);"                            +
 ""                                                                            +
 "    vec3 v3Texel = vec3(1.0);"                                               +
-"    if(fMin > 25.0) v3Texel = texture2D(u_s2Texture, v_v2TexCoord).rgb;"     +
+"    if(fMin > 24.0) v3Texel = texture2D(u_s2Texture, v_v2TexCoord).rgb;"     +
 ""                                                                            +
 "    float fIntensity = 59.0 * inversesqrt(dot(v_v3Relative, v_v3Relative));" +
 "    fIntensity      *= dot(normalize(v_v3Relative), v3Camera);"              +
@@ -61,9 +69,13 @@ cPlane.s_pShader  = null;
 cPlane.s_pTexture = null;
 
 // saved texture text values
-cPlane.s_iDisplayTop    = -1;
-cPlane.s_iDisplayMiddle = -1;
-cPlane.s_iDisplayBottom = -1;
+cPlane.s_fDisplayTop    = -1.0;
+cPlane.s_fDisplayMiddle = -1.0;
+cPlane.s_fDisplayBottom = -1.0;
+cPlane.s_sDisplayText   = "";
+
+// pre-allocated function variables
+cPlane.s_vPrePos = vec2.create();
 
 
 // ****************************************************************
@@ -82,10 +94,10 @@ cPlane.Init = function(bHigh)
     // set texture canvas properties
     TEX.textAlign    = "center";
     TEX.textBaseline = "middle";
-    TEX.font         = (bHigh ? 56 : 28) + "px square";
+    TEX.font         = (bHigh ? "56" : "28") + "px square";
 
     // force texture update
-    cPlane.s_iDisplayMiddle = -1;
+    cPlane.s_fDisplayMiddle = -1.0;
 };
 
 
@@ -100,17 +112,18 @@ cPlane.Exit = function()
 
 
 // ****************************************************************
-cPlane.UpdateTexture = function(iNewValueTop, iNewValueMiddle, iNewValueBottom)
+cPlane.UpdateTextureValues = function(fNewValueTop, fNewValueMiddle, fNewValueBottom)
 {
-    if(cPlane.s_iDisplayTop    !== iNewValueTop    ||
-       cPlane.s_iDisplayMiddle !== iNewValueMiddle ||
-       cPlane.s_iDisplayBottom !== iNewValueBottom)
+    if(cPlane.s_fDisplayTop    !== fNewValueTop    ||
+       cPlane.s_fDisplayMiddle !== fNewValueMiddle ||
+       cPlane.s_fDisplayBottom !== fNewValueBottom)
     {
-        cPlane.s_iDisplayTop    = iNewValueTop;      // time
-        cPlane.s_iDisplayMiddle = iNewValueMiddle;   // score
-        cPlane.s_iDisplayBottom = iNewValueBottom;   // multiplier
+        cPlane.s_fDisplayTop    = fNewValueTop;      // time
+        cPlane.s_fDisplayMiddle = fNewValueMiddle;   // score
+        cPlane.s_fDisplayBottom = fNewValueBottom;   // multiplier
+        cPlane.s_sDisplayText   = "";                // text
 
-        var vPos = vec2.fromValues(g_pTexture.width/2, g_pTexture.height/4);
+        vec2.set(cPlane.s_vPrePos, g_pTexture.width/2, g_pTexture.height/4);
 
         // clear background
         TEX.fillStyle = "#FFFFFF";
@@ -118,15 +131,41 @@ cPlane.UpdateTexture = function(iNewValueTop, iNewValueMiddle, iNewValueBottom)
 
         // draw values
         TEX.fillStyle = "#BBBBBB";
-        if(iNewValueMiddle) TEX.fillText(IntToString(iNewValueMiddle.toFixed(0), 6),                                          vPos[0], vPos[1]*2);
+        if(fNewValueMiddle) TEX.fillText(IntToString(fNewValueMiddle.toFixed(0), 6),                                               cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*2.0);
         TEX.fillStyle = "#DDDDDD";
-        if(iNewValueTop)    TEX.fillText(IntToString(Math.floor(iNewValueTop/60), 2) + ":" + IntToString(iNewValueTop%60, 2), vPos[0], vPos[1]*1);
-        if(iNewValueBottom) TEX.fillText("x " + iNewValueBottom.toFixed(1),                                                   vPos[0], vPos[1]*3);
+        if(fNewValueTop    >= 0) TEX.fillText(IntToString(Math.floor(fNewValueTop/60), 2) + ":" + IntToString(fNewValueTop%60, 2), cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*1.0);
+        if(fNewValueBottom >= 0) TEX.fillText("x " + fNewValueBottom.toFixed(1),                                                   cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*3.0);
  
         // update texture
         cPlane.s_pTexture.Enable();
         cPlane.s_pTexture.Update(g_pTexture);
-        cPlane.s_pTexture.Disable();
+        //cPlane.s_pTexture.Disable();   // render function is called afterwards
+    }
+};
+
+cPlane.UpdateTextureText = function(sNewText1, sNewText2)
+{
+    var sBoth = sNewText1+sNewText2;
+    if(cPlane.s_sDisplayText !== sBoth)
+    {
+        cPlane.s_fDisplayMiddle = -1.0;    // score
+        cPlane.s_sDisplayText   = sBoth;   // text
+
+        vec2.set(cPlane.s_vPrePos, g_pTexture.width/2, g_pTexture.height/4);
+
+        // clear background
+        TEX.fillStyle = "#FFFFFF";
+        TEX.fillRect(0, 0, TEX.canvas.width, TEX.canvas.height);
+
+        // draw text
+        TEX.fillStyle = "#BBBBBB";
+        TEX.fillText(sNewText1, cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*(sNewText2 ? 1.5 : 2.0));
+        if(sNewText2) TEX.fillText(sNewText2, cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*2.5);
+
+        // update texture
+        cPlane.s_pTexture.Enable();
+        cPlane.s_pTexture.Update(g_pTexture);
+        //cPlane.s_pTexture.Disable();   // render function is called afterwards
     }
 };
 

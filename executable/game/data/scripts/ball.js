@@ -1,3 +1,11 @@
+////////////////////////////////////////////////////
+//*----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at) |//
+//*----------------------------------------------*//
+//| Released under the zlib License              |//
+//| More information available in the README.md  |//
+//*----------------------------------------------*//
+////////////////////////////////////////////////////
 
 
 // ****************************************************************
@@ -252,10 +260,12 @@ function cBall()
     this.m_mTransform = mat4.create();
 
     this.m_fAlpha     = 0.0;
-    this.m_fSpeed     = 40.0;
+    this.m_fSpeed     = 42.0;
     this.m_bActive    = false;
+
     this.m_iHitBlock  = 0;
     this.m_iHitPaddle = 0;
+    this.m_fLifeTime  = 0.0;
 }
 
 
@@ -293,6 +303,9 @@ cBall.prototype.Move = function()
     this.m_vPosition[0] += this.m_vDirection[0]*fTimeSpeed;
     this.m_vPosition[1] += this.m_vDirection[1]*fTimeSpeed;
 
+    // update life time
+    this.m_fLifeTime += g_fTime;
+
     // get current plane distance (single value)
     var fMaxPos = Clamp((60.0 - Math.max(Math.abs(this.m_vPosition[0]), Math.abs(this.m_vPosition[1])))*0.05, 0.0, 1.0);
 
@@ -302,6 +315,13 @@ cBall.prototype.Move = function()
     // destroy on zero visibility (too far away from plane or fade-out after level was finished)
     if(this.m_fAlpha <= 0.0)
     {
+        if(g_bGameJolt)
+        {
+            // ball lost too fast, add trophy
+            if(!InTransition() && this.m_fLifeTime < 5.0)
+                GameJoltTrophyAchieve(5740);
+        }
+
         this.m_bActive = false;
         return;
     }
@@ -370,6 +390,9 @@ cBall.prototype.Move = function()
             var fTime = g_fTime*3.0;
             this.m_vPosition[0] += vDiff[0]*fTime;
             this.m_vPosition[1] += vDiff[1]*fTime;
+            
+            // play sound
+            g_pSoundBump.Play(1.3);
 
             // kick all near relevant blocks away
             var iValid = 0;
@@ -379,42 +402,52 @@ cBall.prototype.Move = function()
 
                 // calculate position-difference with current position
                 vec2.sub(vDiff, this.m_vPosition, g_pBlock[j].m_vPosition);
-                if(Math.abs(vDiff[0]) > C_HIT_RANGE ||
-                   Math.abs(vDiff[1]) > C_HIT_RANGE) continue;
-
-                if(vec2.dot(cBall.s_vPreBurst, vDiff) < 0.0)
+                if(Math.abs(vDiff[0]) < C_HIT_RANGE &&
+                   Math.abs(vDiff[1]) < C_HIT_RANGE)
                 {
-                    // calculate damage
-                    var fDamage = (C_HIT_RANGE - vec2.squaredLength(vDiff))*C_HIT_INVERT;
-                    if(fDamage > 0.0)
+                    if(vec2.dot(cBall.s_vPreBurst, vDiff) < 0.0)
                     {
-                        // damage block
-                        g_pBlock[j].m_fHealth -= fDamage;
-                        if(g_pBlock[j].m_fHealth <= 0.0)
+                        // calculate damage
+                        var fDamage = (C_HIT_RANGE - vec2.squaredLength(vDiff))*C_HIT_INVERT;
+                        if(fDamage > 0.0)
                         {
-                            vec2.normalize(vDiff, vDiff);
-
-                            // increase score
-                            g_iScore += (j < C_LEVEL_CENTER) ? 5.0*g_fStatMulti : -5.0;
-
-                            // handle typed blocks
-                            if(g_pBlock[j].m_iType === 1)
+                            // damage block
+                            g_pBlock[j].m_fHealth -= fDamage;
+                            if(g_pBlock[j].m_fHealth <= 0.0)
                             {
-                                // create new ball
-                                cBall.CreateBall(g_pBlock[j].m_vPosition, vDiff, false);
-                            }
-                            if(g_pBlock[j].m_iType === 2)
-                            {
-                                // make paddles longer
-                                for(var k = 0; k < 4; ++k)
-                                    g_pPaddle[k].m_bShield = true;
-                            }
+                                vec2.normalize(vDiff, vDiff);
 
-                            // throw the block out
-                            vec2.negate(vDiff, vDiff);
-                            g_pBlock[j].Throw(vDiff, 30.0);
+                                // increase or decrease score
+                                var fScore = (j < C_LEVEL_CENTER) ? 5.0*g_fStatMulti : -10.0;
+                                g_iScore += fScore;
+
+                                // accumulate negative score
+                                if(g_bGameJolt)
+                                {
+                                    // negative score too high, add trophy (only-1-send switch behind function)
+                                    if(fScore < 0.0) g_fGameJoltNeg += fScore;
+                                    if(g_fGameJoltNeg <= -100.0)
+                                        GameJoltTrophyAchieve(5738);
+                                }
+
+                                // handle typed blocks
+                                if(g_pBlock[j].m_iType === 1)
+                                {
+                                    // create new ball
+                                    cBall.CreateBall(g_pBlock[j].m_vPosition, vDiff, false);
+                                }
+                                if(g_pBlock[j].m_iType === 2)
+                                {
+                                    // make paddles longer
+                                    for(var k = 0; k < 4; ++k)
+                                        g_pPaddle[k].m_bShield = true;
+                                }
+
+                                // throw the block out
+                                vec2.negate(vDiff, vDiff);
+                                g_pBlock[j].Throw(vDiff, 30.0);
+                            }
                         }
-                        g_pAudioBump.Play(1.5);
                     }
                 }
 
@@ -463,7 +496,7 @@ cBall.prototype.Move = function()
                     
                     // start bump-effect
                     g_pPaddle[i].m_fBump = 1.0;
-                    g_pAudioBump.Play();
+                    g_pSoundBump.Play(1.0);
                 }
             }
             else
@@ -495,7 +528,10 @@ cBall.prototype.Move = function()
 
                     // start bump-effect
                     g_pPaddle[i].m_fBump = 1.0;
-                    g_pAudioBump.Play();
+                    g_pSoundBump.Play(1.0);
+
+                    // reset paddle-hit time
+                    g_fGameJoltFly = 0.0;
                 }
             }
         }
@@ -523,6 +559,9 @@ cBall.CreateBall = function(vPosition, vDirection, bFirst)
             // hide him on start
             g_pBall[i].m_fAlpha = bFirst ? 0.0 : 0.5;
             mat4.scale(g_pBall[i].m_mTransform, g_pBall[i].m_mTransform, [0.0, 0.0, 0.0]);
+
+            // reset life time
+            g_pBall[i].m_fLifeTime = 0.0;
 
             // reset camera acceleration
             g_fCamAcc = 0.3;
