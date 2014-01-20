@@ -384,7 +384,7 @@ function Render(iNewTime)
     else
     {
         if(g_bTimeUp) cPlane.UpdateTextureText("TIME UP");
-                 else cPlane.UpdateTextureText("BONUS", IntToString(g_fBonus.toFixed(0), 3));
+                 else cPlane.UpdateTextureText("BONUS", g_fBonus.toFixed(0));
     }
 
     // render plane (after reverse blocks and paddles because of depth testing)
