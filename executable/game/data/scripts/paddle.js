@@ -1,3 +1,11 @@
+////////////////////////////////////////////////////
+//*----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at) |//
+//*----------------------------------------------*//
+//| Released under the zlib License              |//
+//| More information available in the README.md  |//
+//*----------------------------------------------*//
+////////////////////////////////////////////////////
 
 
 // ****************************************************************
@@ -335,6 +343,10 @@ function cPaddle(vDirection)
     this.m_bWall       = true;
     this.m_bShield     = false;
     this.m_bTeleporter = false;
+
+    // (for cleaner bump animation)
+    this.m_avAnimSize  = [vec2.create(), vec2.create()];
+    this.m_avAnimColor = [vec3.fromValues(1.0, 1.0, 1.0), vec3.fromValues(1.0, 1.0, 1.0)];
 }
 
 
@@ -370,7 +382,8 @@ cPaddle.prototype.Render = function()
 // ****************************************************************
 cPaddle.prototype.Move = function()
 {
-    var fTime = g_fTime*2.0;
+    var fTime  = g_fTime*2.0;
+    var fSpeed = g_fTime*30.0;
     var iX = this.m_vDirection[0] ? 0 : 1;
     var iY = this.m_vDirection[0] ? 1 : 0;
 
@@ -388,24 +401,29 @@ cPaddle.prototype.Move = function()
     // update bump-effect
     this.m_fBump = Math.max(this.m_fBump-fTime, 0.0);
 
-    // currently not in strong resize (for visually ugly speed-problems when buming into a resizing paddle)
-    var bNoResize = (this.m_vSize[0] > 9.0 && this.m_bWall) || (this.m_vSize[0] < (this.m_bShield ? 2.7 : 1.7) && !this.m_bWall);
-
     // update size
-    var fSpeed     = this.m_fBump ? g_fTime*30.0 : fTime;
-    var fGrowSpeed = bNoResize    ? fSpeed       : fTime;
-    this.m_vSize[0] += ((this.m_bWall ? 9.2  : (this.m_bShield ? 2.2 : 1.2)) - this.m_vSize[0] + this.m_fBump*0.300) * fGrowSpeed;
-    this.m_vSize[1] += (1.25                                                 - this.m_vSize[1] + this.m_fBump*0.375) * fGrowSpeed;
+    this.m_avAnimSize[0][0] += ((this.m_bWall ? 9.2  : (this.m_bShield ? 2.2 : 1.2)) - this.m_avAnimSize[0][0]) * fTime;
+    this.m_avAnimSize[0][1] += (1.25                                                 - this.m_avAnimSize[0][1]) * fTime;
+    this.m_avAnimSize[1][0] += ((this.m_fBump*0.300)                                 - this.m_avAnimSize[1][0]) * fSpeed;
+    this.m_avAnimSize[1][1] += ((this.m_fBump*0.375)                                 - this.m_avAnimSize[1][1]) * fSpeed;
+    vec2.add(this.m_vSize, this.m_avAnimSize[0], this.m_avAnimSize[1]);
 
     // update color
-    var fFactor = (this.m_bWall ? 0.7 : 1.0) + Math.max(this.m_fBump-0.4, 0.0)*0.7;
-     if(this.m_bTeleporter) vec3.set(g_vVector, 0.888*fFactor, 0.416*fFactor, 1.250*fFactor);
-    else if(this.m_bShield) vec3.set(g_vVector, 0.871*fFactor, 0.983*fFactor, 0.049*fFactor);
-                       else vec3.set(g_vVector, 0.102*fFactor, 0.702*fFactor, 1.000*fFactor);
+    if(this.m_bTeleporter)  vec3.set(g_vVector, 0.888, 0.416, 1.250);
+    else if(this.m_bShield) vec3.set(g_vVector, 0.871, 0.983, 0.049);
+                       else vec3.set(g_vVector, 0.102, 0.702, 1.000);
 
-    this.m_vColor[0] += (g_vVector[0] - this.m_vColor[0])*fSpeed;
-    this.m_vColor[1] += (g_vVector[1] - this.m_vColor[1])*fSpeed;
-    this.m_vColor[2] += (g_vVector[2] - this.m_vColor[2])*fSpeed;
+    var fFactor = (this.m_bWall ? 0.7 : 1.0);
+    this.m_avAnimColor[0][0] += (g_vVector[0]*fFactor - this.m_avAnimColor[0][0])*fTime;
+    this.m_avAnimColor[0][1] += (g_vVector[1]*fFactor - this.m_avAnimColor[0][1])*fTime;
+    this.m_avAnimColor[0][2] += (g_vVector[2]*fFactor - this.m_avAnimColor[0][2])*fTime;
+
+    fFactor = Math.max(this.m_fBump-0.4, 0.0)*0.7;
+    this.m_avAnimColor[1][0] += (g_vVector[0]*fFactor - this.m_avAnimColor[1][0])*fSpeed;
+    this.m_avAnimColor[1][1] += (g_vVector[1]*fFactor - this.m_avAnimColor[1][1])*fSpeed;
+    this.m_avAnimColor[1][2] += (g_vVector[2]*fFactor - this.m_avAnimColor[1][2])*fSpeed;
+
+    vec3.add(this.m_vColor, this.m_avAnimColor[0], this.m_avAnimColor[1]);
 
     // update transformation matrix
     mat4.identity(this.m_mTransform);

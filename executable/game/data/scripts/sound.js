@@ -1,3 +1,11 @@
+////////////////////////////////////////////////////
+//*----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at) |//
+//*----------------------------------------------*//
+//| Released under the zlib License              |//
+//| More information available in the README.md  |//
+//*----------------------------------------------*//
+////////////////////////////////////////////////////
 
 
 // ****************************************************************
@@ -36,6 +44,10 @@ function cSound(sURL)
 
     // send request
     pRequest.send();
+
+    // create gain node (volume control) and connect to context destination
+    this.m_pGain = cSound.s_pContext.createGain();
+    this.m_pGain.connect(cSound.s_pContext.destination);
 }
 
 
@@ -43,16 +55,25 @@ function cSound(sURL)
 cSound.prototype.Play = function(fPitch)
 {
     if(!cSound.s_pContext) return;
+    if(!g_bSound) return;
 
     // create new sound source (# tried to create a source pool, but somehow they can only be used once)
     var pSource = cSound.s_pContext.createBufferSource();
 
-    // set buffer and connect to context destination
+    // set buffer and connect to gain node
     pSource.buffer = this.m_pBuffer;
-    pSource.connect(cSound.s_pContext.destination);
+    pSource.connect(this.m_pGain);
 
     // play the sound
     pSource.playbackRate.value = (fPitch ? fPitch : 1.0) + 0.05*(Math.random()-0.5);
     pSource.start(0);
+};
+
+
+// ****************************************************************
+cSound.prototype.SetVolume = function(fVolume)
+{
+    if(!cSound.s_pContext) return;
     
+    this.m_pGain.gain.value = fVolume;
 };

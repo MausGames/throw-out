@@ -1,3 +1,16 @@
+////////////////////////////////////////////////////
+//*----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at) |//
+//*----------------------------------------------*//
+//| Released under the zlib License              |//
+//| More information available in the README.md  |//
+//*----------------------------------------------*//
+////////////////////////////////////////////////////
+
+
+// ****************************************************************
+// ## Press M on the title screen to receive a platinum trophy. ##
+// ****************************************************************
 
 
 // ****************************************************************
@@ -7,13 +20,15 @@ var TEX;                          // texture canvas 2d context
 var C_CAMERA_OFF   = 22.0;        // Y camera offset
 var C_INTRO_BLOCKS = 5.8;         // moment when blocks are active in the intro
 var C_BALLS        = 10;          // max number of balls
+var C_LEVEL_TIME   = 90.0;        // maximum time in a level
 
 var C_HIT_RANGE  = 30.0;          // block-affect range of the ball (impact radius)
 var C_HIT_INVERT = 1.0/30.0;      // inverted range
 
-var C_TRANSITION_START  = -2.0;   // start-value for level transition
-var C_TRANSITION_CHANGE = -0.5;   // point to apply visual changes (add paddles, remove shield)
+var C_TRANSITION_START  = -3.0;   // start-value for level transition
+var C_TRANSITION_CHANGE = -1.0;   // point to apply visual changes (add paddles, remove shield)
 var C_TRANSITION_LEVEL  =  0.0;   // point to load the level and reset border
+var C_TRANSITION_SCORE  =  1.0;   // point to switch plane text back to current score
 var C_TRANSITION_END    =  5.0;   // end-value for level transition
 
 // application states
@@ -27,6 +42,13 @@ var C_STATUS_FAIL  = 4;
 var C_MENU_MAIN  = 0;
 var C_MENU_PAUSE = 1;
 var C_MENU_FAIL  = 2;
+
+// music files
+var C_MUSIC_FILE =
+["data/music/Catch_My_Fall.ogg",
+ "data/music/Fifth_World.ogg",
+ "data/music/Nocturnia.ogg"];
+var C_MUSIC_CURRENT = 2; //Math.floor(Math.random()*2.999);
 
 
 // ****************************************************************
@@ -64,6 +86,7 @@ var IsExp = false;
 // ****************************************************************
 var g_pCanvas  = null;                          // main canvas
 var g_pTexture = null;                          // texture canvas
+var g_pAudio   = null;                          // audio stream
 
 // menu elements
 var g_pMenuLogo    = null;
@@ -84,9 +107,7 @@ var g_pMenuSound   = null;
 var g_pMenuLevel   = null;
 var g_pMenuScore   = null;
 
-// sound files
-var g_pAudioDust = null;
-var g_pAudioBump = null;
+var g_pSoundBump = null;                        // simple bump sound effect
 
 var g_mProjection = mat4.create();              // global projection matrix
 var g_mCamera     = mat4.create();              // global camera matrix
@@ -102,7 +123,7 @@ var g_fSaveTime  = 0.0;                         // saved time value to calculate
 var g_fTotalTime = 0.0;                         // total time since start of the application
 var g_fTime      = 0.0;                         // last frame time
 var g_fBlockTime = 0.0;                         // own frame time for block-explosion on fail
-var g_fLevelTime = 0.0;                         // total time since start of the current level (begins with negative full transition time for an intro-animation)
+var g_fLevelTime = -C_TRANSITION_END;           // total time since start of the current level (begins with negative full transition time for an intro-animation)
 
 var g_iStatus = C_STATUS_INTRO;                 // application status
 var g_iLevel  = 0;                              // current level number
@@ -119,11 +140,17 @@ var g_fStatTime    = 0.0;                       // total time since starting the
 var g_iActiveMulti = 0;                         // status of displaying the score multiplier (0 = off, 1 = ready, 2 = on)
 var g_iActiveTime  = 0;                         // status of displaying the total time
 
-var g_bQuality      = true;                     // current quality level
-var g_bMusic        = true;                     // current music status
-var g_bSound        = true;                     // current sound status
+var g_fBonus  = 0.0;                            // time bonus of the last level
+var g_bTimeUp = false;                          // time was up (text for plane texture update)
+
+var g_bQuality = true;                          // current quality level
+var g_bMusic   = true;                          // current music status
+var g_bSound   = true;                          // current sound status
+
 var g_bGameJolt     = false;                    // logged in on Game Jolt
 var g_fGameJoltPing = 0.0;                      // timer for Game Jolt user session ping
+var g_fGameJoltNeg  = 0.0;                      // negative points accumulated in the current level
+var g_fGameJoltFly  = 0.0;                      // time since the last paddle bump
 
 var g_iRequestID = 0;                           // ID from requestAnimationFrame()
 
@@ -175,6 +202,17 @@ function Init()
     g_pTexture = document.getElementById("texture");
     TEX = g_pTexture.getContext("2d");
 
+    // retrieve audio stream and load first music file
+    g_pAudio = document.getElementById("stream");
+    g_pAudio.src = C_MUSIC_FILE[C_MUSIC_CURRENT];
+    g_pAudio.addEventListener("ended", function()
+    {
+        // play next music file
+        if(++C_MUSIC_CURRENT >= C_MUSIC_FILE.length) C_MUSIC_CURRENT = 0;
+        this.src = C_MUSIC_FILE[C_MUSIC_CURRENT];
+        this.play();
+    });
+
     // enable depth testing
     GL.enable(GL.DEPTH_TEST);
     GL.depthFunc(GL.LEQUAL);
@@ -214,8 +252,8 @@ function Init()
 
     // init sound class and sound files
     cSound.Init();
-    g_pAudioDust = new cSound("data/sounds/bump.wav");
-    g_pAudioBump = new cSound("data/sounds/bump.wav");
+    g_pSoundBump = new cSound("data/sounds/bump.wav");
+    g_pSoundBump.SetVolume(0.3);
 
     // init object interfaces
     cBackground.Init();
@@ -247,7 +285,7 @@ function Init()
     // create blocks and load first level with border
     g_pBlock = new Array(C_LEVEL_ALL);
     LoadLevel(0);
-    
+
     // pre-calculate and start application (requestAnimationFrame in Move())
     Move();
     for(var i = 0; i < C_LEVEL_ALL; ++i)
@@ -290,11 +328,21 @@ function Render(iNewTime)
 
     if(g_bQuality)
     {
-        // clear only depthbuffer and render background
-        GL.clear(((g_pBackground < 1.0) ? 0 : GL.COLOR_BUFFER_BIT) | GL.DEPTH_BUFFER_BIT);
+        // clear framebuffer and set alpha blending
+        if(g_pBackground.m_fAlpha === 1.0)
+        {
+            GL.disable(GL.BLEND);
+            GL.clear(GL.DEPTH_BUFFER_BIT);
+        }
+        else GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+
+        // render background
         GL.disable(GL.DEPTH_TEST);
         g_pBackground.Render();
         GL.enable(GL.DEPTH_TEST);
+
+        // reset alpha blending
+        if(g_pBackground.m_fAlpha === 1.0) GL.enable(GL.BLEND);
     }
     else
     {
@@ -326,9 +374,23 @@ function Render(iNewTime)
             g_pBlock[i].Render();
     }
 
+    // update plane texture
+    if(g_fTransition >= C_TRANSITION_SCORE || g_iActiveTime !== 2)
+    {
+        cPlane.UpdateTextureValues((g_iActiveTime === 2) ? Math.floor(C_LEVEL_TIME - Clamp(g_fLevelTime, 0.0, C_LEVEL_TIME)) : -1.0,
+                                    g_iScore,
+                                   (g_iActiveMulti === 2) ? g_fStatMulti : -1.0);
+    }
+    else
+    {
+        if(g_bTimeUp) cPlane.UpdateTextureText("TIME UP");
+                 else cPlane.UpdateTextureText("BONUS", IntToString(g_fBonus.toFixed(0), 3));
+    }
+
     // render plane (after reverse blocks and paddles because of depth testing)
-    cPlane.UpdateTexture((g_iActiveTime === 2) ? Math.floor(g_fStatTime) : 0, g_iScore, (g_iActiveMulti === 2) ? g_fStatMulti : 0);
+    GL.disable(GL.BLEND);
     g_pPlane.Render();
+    GL.enable(GL.BLEND);
 
     if(g_iStatus >= C_STATUS_GAME)
     {
@@ -446,6 +508,23 @@ function Move()
 
         // update total level time
         g_fLevelTime += g_fTime;
+
+        // check current time and finish level early
+        if(g_fLevelTime >= C_LEVEL_TIME && g_iActiveTime === 2)
+        {
+            for(var i = 0; i < C_LEVEL_CENTER; ++i)
+            {
+                // throw blocks away
+                vec2.normalize(g_vVector, g_pBlock[i].m_vPosition);
+                g_pBlock[i].Throw(g_vVector, 30.0);
+            }
+
+            // add time out trophy (but not on speed-level)
+            if(g_bGameJolt && g_iLevel !== 10) GameJoltTrophyAchieve(5741);
+
+            // finish level
+            NextLevel();
+        }
         
         // apply level-specific function
         if(cLevel.s_apFunction[g_iLevel] && g_fTransition >= C_TRANSITION_LEVEL)
@@ -494,7 +573,20 @@ function Move()
         if(g_iStatus === C_STATUS_GAME)
         {
             // no ball active and no level transition means player failed (game ends!)
-            if(!InTransition()) ActivateFail();
+            if(!InTransition())
+            {
+                if(g_bGameJolt && g_iLevel < 13)   // not on barrier and final level
+                {
+                    // get number of active blocks
+                    var iBlocks = 0;
+                    for(var i = 0; i < C_LEVEL_CENTER; ++i) 
+                        if(!g_pBlock[i].m_bFlying) ++iBlocks;
+
+                    // check and add trophy
+                    if(0 < iBlocks && iBlocks <= 5) GameJoltTrophyAchieve(5778);
+                }
+                ActivateFail();
+            }
         }
     }
     else // at least one ball
@@ -511,7 +603,18 @@ function Move()
 
         // set current score multiplicator
         if(g_iActiveMulti === 1) g_iActiveMulti = 2;
-        g_fStatMulti = Math.max(Math.floor(fNum), 1.0) * (1.0 + g_iLevel*0.2);
+        g_fStatMulti = (1.0 + Math.max(Math.floor(fNum-1.0), 0.0)*0.5) * (1.0 + Math.max(g_iLevel-2, 0)*0.1);
+
+        if(g_bGameJolt)
+        {
+            // increase paddle-hit time
+            var fOldFly = g_fGameJoltFly;
+            g_fGameJoltFly += g_fTime;
+
+            // long time not touched, add trophy (only-1-send switch behind function)
+            if(g_fGameJoltFly >= 20.0 && fOldFly < 20.0)
+                GameJoltTrophyAchieve(5779);
+        }
     }
     if(g_iStatus === C_STATUS_FAIL) vec2.set(g_vAveragePos, 0.0, 0.0);
 
@@ -610,7 +713,7 @@ function SetupRefresh()
 function SetupInput()
 {
     // implement mouse event movement
-    document.addEventListener('mousemove', function(pCursor)
+    document.addEventListener("mousemove", function(pCursor)
     {
         // set mouse position relative to the canvas
         g_vMousePos[0] = pCursor.clientX*g_fMouseRange - g_fMouseRect[0];
@@ -620,22 +723,38 @@ function SetupInput()
     }, false);
 
     // implement touch event movement
-    document.addEventListener('touchmove', function(pEvent)
+    document.addEventListener("touchmove", function(pEvent)
     {
         // get touch input
         pEvent.preventDefault();
         var pTouch = pEvent.touches[0];
+        if(pEvent.touches.length >= 2) ActivatePause(true);
 
         // set mouse position relative to the canvas
         g_vMousePos[0] = pTouch.pageX*g_fMouseRange - g_fMouseRect[0];
         g_vMousePos[1] = pTouch.pageY*g_fMouseRange - g_fMouseRect[1];
     }, false);
 
-    // implement pause with any keyboard key
-    document.onkeypress = function() {ActivatePause(true);};
+    // implement pause (# onkeypress doesn't get all keys)
+    document.onkeydown = function(pEvent)
+    {
+        pEvent   = window.event || pEvent;
+        var iKey = pEvent.charCode || pEvent.keyCode;
+
+        // add hidden trophy
+        if(g_bGameJolt && g_iStatus <= C_STATUS_MAIN)
+        {
+            // check for M key
+            if(iKey === 77) GameJoltTrophyAchieve(5739);
+        }
+
+        // check for enter, escape and whitespace
+        if(iKey === 13 || iKey === 27 || iKey === 32)
+            ActivatePause(true);
+    };
 
     // implement auto-pause if window-focus is lost
-    window.onblur = document.onkeypress;
+    window.onblur = function() {ActivatePause(true);};
 }
 
 
@@ -686,13 +805,25 @@ function SetupMenu()
     // implement fullscreen button (# IE works only with click-event, not with onmousedown)
     g_pMenuFull.addEventListener("click", function()
     {
-        var pDoc = document.documentElement;
-
-        // enable fullscreen mode
-             if(pDoc.requestFullscreen)       pDoc.requestFullscreen();
-        else if(pDoc.mozRequestFullScreen)    pDoc.mozRequestFullScreen();
-        else if(pDoc.webkitRequestFullscreen) pDoc.webkitRequestFullscreen();
-        else if(pDoc.msRequestFullscreen)     pDoc.msRequestFullscreen();
+        if(document.fullscreenElement       || document.mozFullScreenElement ||
+           document.webkitFullscreenElement || document.msFullscreenElement)
+        {
+            // disable fullscreen mode
+                 if(document.exitFullscreen)       document.exitFullscreen();
+            else if(document.mozCancelFullScreen)  document.mozCancelFullScreen();
+            else if(document.webkitExitFullscreen) document.webkitExitFullscreen();
+            else if(document.msExitFullscreen)     document.msExitFullscreen();
+        }
+        else
+        {
+            var pDoc = document.documentElement;
+            
+            // enable fullscreen mode
+                 if(pDoc.requestFullscreen)       pDoc.requestFullscreen();
+            else if(pDoc.mozRequestFullScreen)    pDoc.mozRequestFullScreen();
+            else if(pDoc.webkitRequestFullscreen) pDoc.webkitRequestFullscreen();
+            else if(pDoc.msRequestFullscreen)     pDoc.msRequestFullscreen();
+        }
     }, false);
 
     // implement volume buttons (# hope the color-effect is clear, had some troubles with range-element and unicode support)
@@ -700,6 +831,10 @@ function SetupMenu()
     {
         g_bMusic = !g_bMusic;
         this.style.color = g_bMusic ? "" : "#444444";
+
+        // play or pause the current music stream
+        if(g_bMusic) g_pAudio.play();
+                else g_pAudio.pause();
     };
     g_pMenuSound.onmousedown = function()
     {
@@ -733,9 +868,8 @@ function Resize()
     // resize font
     document.body.style.fontSize = (g_pCanvas.height/800.0)*100.0 + "%";
 
-    // resize logo
-    g_pMenuLogo.style.width      =  g_pCanvas.width*0.32 + "px";
-    g_pMenuLogo.style.marginLeft = -g_pCanvas.width*0.16 + "px";
+    // center logo
+    g_pMenuLogo.style.marginLeft = -g_pMenuLogo.naturalWidth/g_pMenuLogo.naturalHeight * g_pCanvas.height*0.18*0.5 + "px";
 
     // resize menu
     var sWidth = g_pCanvas.width + "px";
@@ -787,6 +921,8 @@ function SetMenuOpacity(iType, fOpacity)
     // set option element opacity
     SetOpacity(g_pMenuOption1, fOpacity);
     SetOpacity(g_pMenuOption2, fOpacity);
+    SetOpacity(g_pMenuTop,    fOpacity);
+    SetOpacity(g_pMenuVolume, fOpacity);
 
     if(iType === C_MENU_MAIN)
     {
@@ -802,8 +938,6 @@ function SetMenuOpacity(iType, fOpacity)
     {
         // set pause menu opacity
         SetOpacity(g_pMenuHeader, fOpacity);
-        SetOpacity(g_pMenuTop,    fOpacity);
-        SetOpacity(g_pMenuVolume, fOpacity);
     }
     else if(iType === C_MENU_FAIL)
     {
@@ -821,6 +955,8 @@ function SetMenuEnable(iType, bEnabled)
     // enable or disable option element interaction
     g_pMenuOption1.style.pointerEvents = sValue;
     g_pMenuOption2.style.pointerEvents = sValue;
+    g_pMenuTop.style.pointerEvents    = sValue;
+    g_pMenuVolume.style.pointerEvents = sValue;
 
     if(iType === C_MENU_MAIN)
     {
@@ -833,13 +969,12 @@ function SetMenuEnable(iType, bEnabled)
     else if(iType === C_MENU_PAUSE)
     {
         // enable or disable pause menu interaction
-        g_pMenuTop.style.pointerEvents    = sValue;
-        g_pMenuVolume.style.pointerEvents = sValue;
+        // # nothing to see here
     }
     else if(iType === C_MENU_FAIL)
     {
         // enable or disable fail menu interaction
-        // # nothing to see here
+        // # nothing to see here either
     }
 }
 
@@ -874,6 +1009,9 @@ function ActivatePause(bPaused)
         SetMenuOpacity(C_MENU_PAUSE, 1.0);
         SetMenuEnable(C_MENU_PAUSE, true);
         SetCursor(false);
+
+        // set music volume
+        g_pAudio.volume = 0.5;
     }
     else if(!bPaused && g_iStatus === C_STATUS_PAUSE)
     {
@@ -885,6 +1023,9 @@ function ActivatePause(bPaused)
         SetMenuOpacity(C_MENU_PAUSE, 0.0);
         SetMenuEnable(C_MENU_PAUSE, false);
         SetCursor(true);
+
+        // set music volume
+        g_pAudio.volume = 1.0;
     }
 }
 
@@ -923,6 +1064,9 @@ function ActivateFail()
 
         g_pBlock[i].Throw(g_vVector, g_vVector[2]);
     }
+    
+    // set music volume
+    g_pAudio.volume = 0.5;
 }
 
 
@@ -948,6 +1092,42 @@ function Reflect(vOutput, vVelocity, vNormal)
     fDot *= 2.0;
     vOutput[0] = vVelocity[0] - vNormal[0]*fDot;
     vOutput[1] = vVelocity[1] - vNormal[1]*fDot;
+}
+
+
+// ****************************************************************
+function TimeBits(n, o)   // o = new Array(13)
+{
+    // 00 01 02
+    // 03    04
+    // 05 06 07
+    // 08    09
+    // 10 11 12
+
+    for(var i = 0; i < 13; ++i) o[i] = false;
+
+    o[02] = true;
+    o[07] = true;
+    o[12] = true;
+    if(n === 2 || n === 6 || n === 8 || n === 0) o[08] = true;
+    if(n !== 5 && n !== 6)                       o[04] = true;
+    if(n !== 2)                                  o[09] = true;
+    if(n !== 1)
+    {
+        o[00] = true;
+        if(n !== 4) o[01] = true;
+        if(n !== 7)
+        {
+            o[05] = true;
+            if(n !== 0)            o[06] = true;
+            if(n !== 2 && n !== 3) o[03] = true;
+            if(n !== 4)
+            {
+                o[10] = true;
+                o[11] = true;
+            }
+        }
+    }
 }
 
 
