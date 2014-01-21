@@ -318,7 +318,7 @@ function Render(iNewTime)
 {
     // calculate elapsed and total time
     var fNewSaveTime = iNewTime * 0.001;
-    var fNewTime = fNewSaveTime - g_fSaveTime;
+    var fNewTime = Math.abs(fNewSaveTime - g_fSaveTime); // hope the ABS fixes a weird FF bug where time stutters backwards sometimes
     g_fSaveTime = fNewSaveTime;
 
     // smooth out inconsistent framerates
