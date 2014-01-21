@@ -17,10 +17,11 @@
 var GL;                           // WebGL context
 var TEX;                          // texture canvas 2d context
 
-var C_CAMERA_OFF   = 22.0;        // Y camera offset
-var C_INTRO_BLOCKS = 5.8;         // moment when blocks are active in the intro
-var C_BALLS        = 10;          // max number of balls
-var C_LEVEL_TIME   = 90.0;        // maximum time in a level
+var C_CAMERA_OFF    = 22.0;       // Y camera offset
+var C_INTRO_BLOCKS  = 5.8;        // moment when blocks are active in the intro
+var C_BALLS         = 10;         // max number of balls
+var C_LEVEL_TIME    = 90.0;       // maximum time in a level
+var C_BORDER_HEALTH = 0.5;        // health of all the border blocks (difficulty value)
 
 var C_HIT_RANGE  = 30.0;          // block-affect range of the ball (impact radius)
 var C_HIT_INVERT = 1.0/30.0;      // inverted range
@@ -48,7 +49,6 @@ var C_MUSIC_FILE =
 ["data/music/Catch_My_Fall.ogg",
  "data/music/Fifth_World.ogg",
  "data/music/Nocturnia.ogg"];
-var C_MUSIC_CURRENT = 2; //Math.floor(Math.random()*2.999);
 
 
 // ****************************************************************
@@ -109,6 +109,9 @@ var g_pMenuScore   = null;
 
 var g_pSoundBump = null;                        // simple bump sound effect
 
+var g_iMusicCurrent = 2;                        // current music file (Math.floor(Math.random()*2.999);)
+var g_bMusicStatus  = false;                    // music activated in the level (not to be confused with g_bMusic)
+
 var g_mProjection = mat4.create();              // global projection matrix
 var g_mCamera     = mat4.create();              // global camera matrix
 var g_vView       = vec2.clone(C_BALL_START);   // current postion and view of the camera
@@ -125,9 +128,10 @@ var g_fTime      = 0.0;                         // last frame time
 var g_fBlockTime = 0.0;                         // own frame time for block-explosion on fail
 var g_fLevelTime = -C_TRANSITION_END;           // total time since start of the current level (begins with negative full transition time for an intro-animation)
 
-var g_iStatus = C_STATUS_INTRO;                 // application status
-var g_iLevel  = 0;                              // current level number
-var g_iScore  = 0;                              // current player score (handled as float)
+var g_iStatus  = C_STATUS_INTRO;                // application status
+var g_iLevel   = 0;                             // current level number
+var g_iScore   = 0;                             // current player score (handled as float)
+var g_iChances = 1;                             // number of remaining chances
 
 var g_bDepthSort = false;                       // render blocks depth-sorted
 
@@ -142,6 +146,7 @@ var g_iActiveTime  = 0;                         // status of displaying the tota
 
 var g_fBonus  = 0.0;                            // time bonus of the last level
 var g_bTimeUp = false;                          // time was up (text for plane texture update)
+var g_bSecond = false;                          // second chance used (text for plane texture update)
 
 var g_bQuality = true;                          // current quality level
 var g_bMusic   = true;                          // current music status
@@ -204,12 +209,12 @@ function Init()
 
     // retrieve audio stream and load first music file
     g_pAudio = document.getElementById("stream");
-    g_pAudio.src = C_MUSIC_FILE[C_MUSIC_CURRENT];
+    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent];
     g_pAudio.addEventListener("ended", function()
     {
         // play next music file
-        if(++C_MUSIC_CURRENT >= C_MUSIC_FILE.length) C_MUSIC_CURRENT = 0;
-        this.src = C_MUSIC_FILE[C_MUSIC_CURRENT];
+        if(++g_iMusicCurrent >= C_MUSIC_FILE.length) g_iMusicCurrent = 0;
+        this.src = C_MUSIC_FILE[g_iMusicCurrent];
         this.play();
     });
 
@@ -383,8 +388,9 @@ function Render(iNewTime)
     }
     else
     {
-        if(g_bTimeUp) cPlane.UpdateTextureText("TIME UP");
-                 else cPlane.UpdateTextureText("BONUS", g_fBonus.toFixed(0));
+             if(g_bSecond) cPlane.UpdateTextureText("SECOND", "CHANCE");
+        else if(g_bTimeUp) cPlane.UpdateTextureText("TIME UP");
+                      else cPlane.UpdateTextureText("BONUS", g_fBonus.toFixed(0));
     }
 
     // render plane (after reverse blocks and paddles because of depth testing)
@@ -512,18 +518,11 @@ function Move()
         // check current time and finish level early
         if(g_fLevelTime >= C_LEVEL_TIME && g_iActiveTime === 2)
         {
-            for(var i = 0; i < C_LEVEL_CENTER; ++i)
-            {
-                // throw blocks away
-                vec2.normalize(g_vVector, g_pBlock[i].m_vPosition);
-                g_pBlock[i].Throw(g_vVector, 30.0);
-            }
-
             // add time out trophy (but not on speed-level)
             if(g_bGameJolt && g_iLevel !== 10) GameJoltTrophyAchieve(5741);
 
             // finish level
-            NextLevel();
+            NextLevel(false);
         }
         
         // apply level-specific function
@@ -585,7 +584,9 @@ function Move()
                     // check and add trophy
                     if(0 < iBlocks && iBlocks <= 5) GameJoltTrophyAchieve(5778);
                 }
-                ActivateFail();
+                
+                // reduce chances, skip level or activate fail screen
+                NextLevel(true);
             }
         }
     }
@@ -832,14 +833,23 @@ function SetupMenu()
         g_bMusic = !g_bMusic;
         this.style.color = g_bMusic ? "" : "#444444";
 
+        // play sound effect
+        if(g_bMusic) g_pSoundBump.Play(1.3);
+
         // play or pause the current music stream
-        if(g_bMusic) g_pAudio.play();
-                else g_pAudio.pause();
+        if(g_iMusicStatus)
+        {
+            if(g_bMusic) g_pAudio.play();
+                    else g_pAudio.pause();
+        }
     };
     g_pMenuSound.onmousedown = function()
     {
         g_bSound = !g_bSound;
         this.style.color = g_bSound ? "" : "#444444";
+
+        // play sound effect
+        if(g_bSound) g_pSoundBump.Play(1.0);
     };
 
     // adjust back button

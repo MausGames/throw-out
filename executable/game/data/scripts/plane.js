@@ -98,6 +98,7 @@ cPlane.Init = function(bHigh)
 
     // force texture update
     cPlane.s_fDisplayMiddle = -1.0;
+    cPlane.s_sDisplayText   = "";
 };
 
 

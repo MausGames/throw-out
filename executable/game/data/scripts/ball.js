@@ -456,7 +456,7 @@ cBall.prototype.Move = function()
             }
 
             // check for cleared level
-            if(!iValid) NextLevel();
+            if(!iValid) NextLevel(false);
         }
 
         // pre-calculate ball-position with ball-size
@@ -523,7 +523,7 @@ cBall.prototype.Move = function()
 
                     // reflect ball
                     Reflect(this.m_vDirection, this.m_vDirection, vDiff);
-                    this.m_vDirection[iY] = Math.abs(this.m_vDirection[iY]) * g_pPaddle[i].m_vDirection[iY];
+                    this.m_vDirection[iY] = Math.max(Math.abs(this.m_vDirection[iY]), 0.35) * g_pPaddle[i].m_vDirection[iY];
                     vec2.normalize(this.m_vDirection, this.m_vDirection);
 
                     // start bump-effect

@@ -56,14 +56,42 @@ cLevel.s_aiStatus = new Float32Array(10);   // some status attributes for level-
 
 
 // ****************************************************************
-function NextLevel()
+function NextLevel(bLoseChance)
 {
-    // calculate time bonus and set message type
     if(g_iActiveTime === 2)
     {
-        g_fBonus  = Math.floor(1000.0 * Clamp((C_LEVEL_TIME-g_fLevelTime)/C_LEVEL_TIME, 0.0, 1.0));
-        g_iScore += g_fBonus;
-        g_bTimeUp = (g_fLevelTime >= C_LEVEL_TIME) ? true : false;
+        // calculate remaining chances
+        if(bLoseChance)
+        {
+            if(--g_iChances < 0)
+            {
+                // no chances left, activate fail screen
+                ActivateFail();
+                return;
+            }
+
+            // display "second chance" message
+            g_bSecond = true;
+            g_bTimeUp = false;
+        }
+        else
+        {
+            g_bSecond = false;
+
+            // calculate time bonus and diplay message ("bonus xxx" or "time up")
+            g_fBonus  = Math.floor(1000.0 * Clamp((C_LEVEL_TIME-g_fLevelTime)/C_LEVEL_TIME, 0.0, 1.0));
+            g_iScore += g_fBonus;
+            g_bTimeUp = (g_fLevelTime >= C_LEVEL_TIME) ? true : false;
+        }
+    }
+
+    // throw missing blocks away
+    for(var i = 0; i < C_LEVEL_CENTER; ++i)
+    {
+        if(g_pBlock[i].m_bFlying) continue;
+
+        vec2.normalize(g_vVector, g_pBlock[i].m_vPosition);
+        g_pBlock[i].Throw(g_vVector, 30.0);
     }
 
     // call level exit-function
@@ -72,8 +100,9 @@ function NextLevel()
     // reset total level time
     g_fLevelTime = C_TRANSITION_START - C_TRANSITION_END;
 
-    // reset current negative score
+    // reset current negative score and paddle-hit time
     g_fGameJoltNeg = 0.0;
+    g_fGameJoltFly = 0.0;
 
     // convert camera rotation for smooth reset
     g_fCamAngle  = g_fCamAngle % (Math.PI*2.0);
@@ -142,6 +171,9 @@ function LoadLevel(iLevelNum)
                 var fSecond = (i < 2*C_LEVEL_BY+C_LEVEL_BX) ? 1.0 : -1.0;
                 vec3.set(g_pBlock[iCur].m_vPosition, -40.0*fSecond, (((iVal - C_LEVEL_BX/2)+0.5)*C_BLOCK_DIST) * 1.5*fSecond, 180.0+i*15);
             }
+
+            // add a bit of health to the border
+            g_pBlock[iCur].m_fHealth = C_BORDER_HEALTH;
 
             // set color and activate block
             vec4.set(g_pBlock[iCur].m_vColor, 0.2, 0.2, 0.2, 1.0);
@@ -226,7 +258,12 @@ cLevel.s_avBallDir[LVL] =
 
 cLevel.s_asText[LVL] = "";
 
-cLevel.s_apInit[LVL] = function() {};
+cLevel.s_apInit[LVL] = function()
+{
+    // border in first level is invincible
+    for(var i = C_LEVEL_CENTER; i < C_LEVEL_ALL; ++i)
+        g_pBlock[i].m_fHealth = 1000.0;
+};
 cLevel.s_apFunction[LVL] = function()
 {
     var fIntensity = -(Math.max(g_fLevelTime-30.0, 0.0)/240.0);
@@ -252,7 +289,12 @@ cLevel.s_apFunction[LVL] = function()
         }
     }
 };
-cLevel.s_apExit[LVL] = function() {};
+cLevel.s_apExit[LVL] = function()
+{
+    // remove border invincibility
+    for(var i = C_LEVEL_CENTER; i < C_LEVEL_ALL; ++i)
+        g_pBlock[i].m_fHealth = C_BORDER_HEALTH;
+};
 
 
 // ****************************************************************
@@ -328,7 +370,8 @@ cLevel.s_apFunction[LVL] = function()
             cLevel.s_aiStatus[0] = 1;
 
             // start music!
-            g_pAudio.play();
+            g_iMusicStatus = true;
+            if(g_bMusic) g_pAudio.play();
         }
     }
 };
@@ -858,7 +901,7 @@ cLevel.s_apInit[LVL] = function()
 
     // increase transition time
     cLevel.s_aiStatus[4] = C_TRANSITION_END;
-    C_TRANSITION_END = 8.0;
+    C_TRANSITION_END = 7.0;
 };
 cLevel.s_apFunction[LVL] = function()
 {
@@ -880,7 +923,7 @@ cLevel.s_apFunction[LVL] = function()
     }
 
     // calculate effect delay and intro
-    var fTime = Math.max(g_fLevelTime+0.5, 0.0);
+    var fTime = Math.max(g_fLevelTime-0.5, 0.0);
     if(!fTime) return;
 
     // calculate effect strength and movement speed
@@ -915,7 +958,7 @@ cLevel.s_apExit[LVL] = function()
 {
     // remove border invincibility
     for(var i = C_LEVEL_CENTER+C_LEVEL_BX; i < C_LEVEL_ALL; ++i)
-        g_pBlock[i].m_fHealth = 0.0;
+        g_pBlock[i].m_fHealth = C_BORDER_HEALTH;
 
     // reset affect range
     C_HIT_RANGE  = cLevel.s_aiStatus[0];
@@ -1082,7 +1125,7 @@ cLevel.s_aavColor[LVL] =
  vec3.fromValues(255.0/255.0, 255.0/255.0, 255.0/255.0)];
 
 cLevel.s_aaiValue[LVL] =
-[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 5,
+[0, 0, 0, 0, 0, 0, 0, 0, 0, 0,  0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 0, 3, 0, 0, 0, 5,  0, 0, 0, 0, 5, 0, 0, 0, 0, 0,
  0, 0, 0, 0, 3, 4, 3, 0, 0, 0,  0, 0, 0, 5, 4, 5, 0, 0, 0, 0,
  0, 0, 0, 3, 4, 5, 4, 3, 0, 0,  0, 0, 5, 4, 3, 4, 5, 0, 0, 0,
@@ -1106,8 +1149,7 @@ cLevel.s_aaiValue[LVL] =
 
 cLevel.s_aaiTyped[LVL] =
 [{iX :  9, iY :  1, iType : 1},
- {iX : 18, iY : 10, iType : 1},
- {iX : 19, iY :  0, iType : 2}];
+ {iX : 18, iY : 10, iType : 2}];
 
 cLevel.s_aabPaddle[LVL] =
 [1, 0, 1, 0];
@@ -1671,7 +1713,7 @@ cLevel.s_apFunction[LVL] = function()
         // set bonus and go to last level
         g_fLevelTime  = 0.0;   // maximum bonus
         g_iActiveTime = 2;
-        NextLevel();
+        NextLevel(false);
 
         return;
     }
