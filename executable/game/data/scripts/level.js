@@ -1669,7 +1669,7 @@ cLevel.s_apFunction[LVL] = function()
         }
 
         // set bonus and go to last level
-        g_fLevelTime  = 0;   // maximum bonus
+        g_fLevelTime  = 0.0;   // maximum bonus
         g_iActiveTime = 2;
         NextLevel();
 
