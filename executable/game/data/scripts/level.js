@@ -58,30 +58,31 @@ cLevel.s_aiStatus = new Float32Array(10);   // some status attributes for level-
 // ****************************************************************
 function NextLevel(bLoseChance)
 {
-    if(g_iActiveTime === 2)
+    // control bonus, malus and displayed message
+    g_iMessage = 0;
+    if(bLoseChance)
     {
         // calculate remaining chances
-        if(bLoseChance)
+        if(--g_iChances < 0)
         {
-            if(--g_iChances < 0)
-            {
-                // no chances left, activate fail screen
-                ActivateFail();
-                return;
-            }
-
-            // display "second chance" message
-            g_bSecond = true;
-            g_bTimeUp = false;
+            // no chances left, activate fail screen
+            ActivateFail();
+            return;
         }
-        else
-        {
-            g_bSecond = false;
 
-            // calculate time bonus and diplay message ("bonus xxx" or "time up")
+        // display chance message
+        g_iMessage = C_MSG_CHANCE;
+    }
+    else
+    {
+        if(g_iActiveTime === 2)
+        {
+            // calculate time bonus
             g_fBonus  = Math.floor(1000.0 * Clamp((C_LEVEL_TIME-g_fLevelTime)/C_LEVEL_TIME, 0.0, 1.0));
             g_iScore += g_fBonus;
-            g_bTimeUp = (g_fLevelTime >= C_LEVEL_TIME) ? true : false;
+
+            // diplay bonus or time up message
+            g_iMessage = g_fBonus ? C_MSG_BONUS : C_MSG_TIME;
         }
     }
 
@@ -263,10 +264,16 @@ cLevel.s_apInit[LVL] = function()
     // border in first level is invincible
     for(var i = C_LEVEL_CENTER; i < C_LEVEL_ALL; ++i)
         g_pBlock[i].m_fHealth = 1000.0;
+
+    // increase affect range
+    cLevel.s_aiStatus[0] = C_HIT_RANGE;
+    cLevel.s_aiStatus[1] = C_HIT_INVERT;
+    C_HIT_RANGE  = 60.0;
+    C_HIT_INVERT = 1.0/60.0;
 };
 cLevel.s_apFunction[LVL] = function()
 {
-    var fIntensity = -(Math.max(g_fLevelTime-30.0, 0.0)/240.0);
+    var fIntensity = -(Math.max(g_fLevelTime-25.0, 0.0)/240.0);
     if(fIntensity)
     {
         // bending algorithm (# copied from "bending blocks" to make the first level less frustrating)
@@ -294,6 +301,10 @@ cLevel.s_apExit[LVL] = function()
     // remove border invincibility
     for(var i = C_LEVEL_CENTER; i < C_LEVEL_ALL; ++i)
         g_pBlock[i].m_fHealth = C_BORDER_HEALTH;
+
+    // reset affect range
+    C_HIT_RANGE  = cLevel.s_aiStatus[0];
+    C_HIT_INVERT = cLevel.s_aiStatus[1];
 };
 
 

@@ -21,10 +21,10 @@ var C_CAMERA_OFF    = 22.0;       // Y camera offset
 var C_INTRO_BLOCKS  = 5.8;        // moment when blocks are active in the intro
 var C_BALLS         = 10;         // max number of balls
 var C_LEVEL_TIME    = 90.0;       // maximum time in a level
-var C_BORDER_HEALTH = 0.5;        // health of all the border blocks (difficulty value)
+var C_BORDER_HEALTH = 0.6;        // health of all the border blocks (difficulty value)
 
-var C_HIT_RANGE  = 30.0;          // block-affect range of the ball (impact radius)
-var C_HIT_INVERT = 1.0/30.0;      // inverted range
+var C_HIT_RANGE  = 33.0;          // block-affect range of the ball (impact radius)
+var C_HIT_INVERT = 1.0/33.0;      // inverted range
 
 var C_TRANSITION_START  = -3.0;   // start-value for level transition
 var C_TRANSITION_CHANGE = -1.0;   // point to apply visual changes (add paddles, remove shield)
@@ -39,10 +39,15 @@ var C_STATUS_GAME  = 2;
 var C_STATUS_PAUSE = 3;
 var C_STATUS_FAIL  = 4;
 
-// menu type
+// menu types
 var C_MENU_MAIN  = 0;
 var C_MENU_PAUSE = 1;
 var C_MENU_FAIL  = 2;
+
+// message types
+var C_MSG_BONUS  = 1;
+var C_MSG_TIME   = 2;
+var C_MSG_CHANCE = 3;
 
 // music files
 var C_MUSIC_FILE =
@@ -131,7 +136,7 @@ var g_fLevelTime = -C_TRANSITION_END;           // total time since start of the
 var g_iStatus  = C_STATUS_INTRO;                // application status
 var g_iLevel   = 0;                             // current level number
 var g_iScore   = 0;                             // current player score (handled as float)
-var g_iChances = 1;                             // number of remaining chances
+var g_iChances = 2;                             // number of remaining chances
 
 var g_bDepthSort = false;                       // render blocks depth-sorted
 
@@ -144,9 +149,8 @@ var g_fStatTime    = 0.0;                       // total time since starting the
 var g_iActiveMulti = 0;                         // status of displaying the score multiplier (0 = off, 1 = ready, 2 = on)
 var g_iActiveTime  = 0;                         // status of displaying the total time
 
-var g_fBonus  = 0.0;                            // time bonus of the last level
-var g_bTimeUp = false;                          // time was up (text for plane texture update)
-var g_bSecond = false;                          // second chance used (text for plane texture update)
+var g_iMessage = 0;                             // message type displayed on the plane (1 = bonus, 2 = time was up, 3 = second chance used)
+var g_fBonus   = 0.0;                           // time bonus of the last level
 
 var g_bQuality = true;                          // current quality level
 var g_bMusic   = true;                          // current music status
@@ -331,29 +335,9 @@ function Render(iNewTime)
     else g_fTime = 0.85*g_fTime + 0.15*fNewTime;
     g_fTotalTime += g_fTime;
 
-    if(g_bQuality)
-    {
-        // clear framebuffer and set alpha blending
-        if(g_pBackground.m_fAlpha === 1.0)
-        {
-            GL.disable(GL.BLEND);
-            GL.clear(GL.DEPTH_BUFFER_BIT);
-        }
-        else GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
-
-        // render background
-        GL.disable(GL.DEPTH_TEST);
-        g_pBackground.Render();
-        GL.enable(GL.DEPTH_TEST);
-
-        // reset alpha blending
-        if(g_pBackground.m_fAlpha === 1.0) GL.enable(GL.BLEND);
-    }
-    else
-    {
-        // clear full framebuffer
-        GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
-    }
+    // render background
+    if(g_bQuality) g_pBackground.Render();
+    else GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
     if(g_iStatus === C_STATUS_GAME)
     {
@@ -380,7 +364,7 @@ function Render(iNewTime)
     }
 
     // update plane texture
-    if(g_fTransition >= C_TRANSITION_SCORE || g_iActiveTime !== 2)
+    if(g_fTransition >= C_TRANSITION_SCORE || !g_iMessage)
     {
         cPlane.UpdateTextureValues((g_iActiveTime === 2) ? Math.floor(C_LEVEL_TIME - Clamp(g_fLevelTime, 0.0, C_LEVEL_TIME)) : -1.0,
                                     g_iScore,
@@ -388,15 +372,13 @@ function Render(iNewTime)
     }
     else
     {
-             if(g_bSecond) cPlane.UpdateTextureText("SECOND", "CHANCE");
-        else if(g_bTimeUp) cPlane.UpdateTextureText("TIME UP");
-                      else cPlane.UpdateTextureText("BONUS", g_fBonus.toFixed(0));
+             if(g_iMessage === C_MSG_BONUS)  cPlane.UpdateTextureText("BONUS", g_fBonus.toFixed(0));
+        else if(g_iMessage === C_MSG_TIME)   cPlane.UpdateTextureText("TIME UP");
+        else if(g_iMessage === C_MSG_CHANCE) cPlane.UpdateTextureText((g_iChances > 0) ? "SECOND" : "LAST", "CHANCE");
     }
 
     // render plane (after reverse blocks and paddles because of depth testing)
-    GL.disable(GL.BLEND);
     g_pPlane.Render();
-    GL.enable(GL.BLEND);
 
     if(g_iStatus >= C_STATUS_GAME)
     {
@@ -613,7 +595,7 @@ function Move()
             g_fGameJoltFly += g_fTime;
 
             // long time not touched, add trophy (only-1-send switch behind function)
-            if(g_fGameJoltFly >= 20.0 && fOldFly < 20.0)
+            if(g_fGameJoltFly >= 15.0 && fOldFly < 20.0)
                 GameJoltTrophyAchieve(5779);
         }
     }
@@ -1010,7 +992,7 @@ function ActivatePause(bPaused)
         g_pMenuStart.onmousedown = function() {ActivatePause(false);};
         g_pMenuEnd.onmousedown = function()
         {
-            var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : "javascript:window.location.reload(false)";
+            var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location; // "javascript:window.location.reload(false)";
             g_pMenuOption2.innerHTML = "<font id='end' class='button'><a href='" + sSkip + "'>Restart complete game ?</a></font>";
         };
 
@@ -1053,7 +1035,7 @@ function ActivateFail()
     if(g_bGameJolt) GameJoltScoreAdd();
 
     // set option elements and implement application restart and return
-    var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : "javascript:window.location.reload(false)";
+    var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location;
     g_pMenuOption1.innerHTML = "<font id='start' class='button'><a href='" + sSkip + "'>Restart</a></font>";
     g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (QueryString["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
 

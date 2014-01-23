@@ -189,7 +189,9 @@ cPlane.prototype.Render = function()
     GL.uniformMatrix4fv(cPlane.s_pShader.m_iUniformModelView,     false, g_mCamera);
 
     // set texture and render the model
+    GL.disable(GL.BLEND);
     cPlane.s_pTexture.Enable();
     cPlane.s_pModel.Render();
     cPlane.s_pTexture.Disable();
+    GL.enable(GL.BLEND);
 };

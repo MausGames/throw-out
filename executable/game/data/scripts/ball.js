@@ -502,7 +502,7 @@ cBall.prototype.Move = function()
             else
             {
                 // set paddle size
-                vec2.set(g_vVector, (g_pPaddle[i].m_vSize[0] > 5.0) ? 100.0 : (g_pPaddle[i].m_vSize[0]*3.75), C_PADDLE_RANGE);
+                vec2.set(g_vVector, (g_pPaddle[i].m_vSize[0] > 5.0) ? 100.0 : (g_pPaddle[i].m_vSize[0]*3.8), C_PADDLE_RANGE);
 
                 if(cBall.s_vPreTrueSize[0] < g_pPaddle[i].m_vPosition[0] + g_vVector[iX] &&
                    cBall.s_vPreTrueSize[1] > g_pPaddle[i].m_vPosition[0] - g_vVector[iX] &&
