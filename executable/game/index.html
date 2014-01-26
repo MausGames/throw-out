@@ -34,7 +34,7 @@
 
         <meta name="application-name" content="Throw Out" />
         <meta name="author" content="Martin Mauersics" />
-        <meta name="description" content="Simple Breakout Clone made with JavaScript and WebGL" />
+        <meta name="description" content="Simple Breakout clone made with JavaScript and WebGL" />
         <meta name="keywords" content="breakout, javascript, webgl, 3d, game, opensource" />
 
         <meta name="robots" content="index, follow" />
@@ -75,7 +75,7 @@
 
         <!-- Audio Stream -->
         <audio id="stream" preload="auto">
-            <source src="" type="audio/ogg"> <!-- not supported by IE -->
+            <source src="" type="audio/ogg"> <!-- OGG not supported by IE -->
         </audio>
 
         <!-- Images -->
@@ -112,9 +112,10 @@
             <font>(c) 2014 <a href="http://www.maus-games.at" target="_blank">Maus Games</a> - v0.9.1b</font>
         </div>
 
-        <!-- Game Jolt -->
+        <!-- Game Jolt / Music -->
         <div id="text-bottom-right" class="side" style="font: 1.8em square; right: 1%; bottom: 1%;">
-            <font>Play on <a href="http://gamejolt.com/games/arcade/-/20444/" target="_blank">Game Jolt</a></font>
+            <!--font>Play on <a href="http://gamejolt.com/games/arcade/-/20444/" target="_blank">Game Jolt</a></font-->
+            <font>Music by <a href="http://www.toucanmusic.co.uk/albums/toulp5.html" target="_blank">Psychadelik Pedestrian</a></font>
         </div>
 
         <!-- Video Configuration -->
@@ -127,7 +128,8 @@
         <div id="text-top-left" class="side" style="font: 2.8em square; left: 1%; top: 1%;">
             <!-- &#9835; &#x1f50a; -->
             <font id="music" class="button"><span title="Music" onmouseover="this.innerHTML='Music';" onmouseout="this.innerHTML='M';">M</span></font>&nbsp;&nbsp;
-            <font id="sound" class="button"><span title="Sound" onmouseover="this.innerHTML='Sound';" onmouseout="this.innerHTML='S';">S</span></font>
+            <font id="sound" class="button"><span title="Sound" onmouseover="this.innerHTML='Sound';" onmouseout="this.innerHTML='S';">S</span></font><br />
+            <font id="warning" style="font: 64% square;"></font>
         </div>
 
     </body>
