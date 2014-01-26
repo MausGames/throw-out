@@ -1065,7 +1065,7 @@ function ActivateFail()
 // ****************************************************************
 function ReadFile(sURL)
 {
-    // create synchron request to read a file
+    // create synchronous request to read a file
     var pRequest = new XMLHttpRequest();
     pRequest.open("GET", sURL, false);
     pRequest.send();
