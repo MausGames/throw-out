@@ -109,6 +109,7 @@ var g_pMenuFull    = null;
 var g_pMenuQuality = null;
 var g_pMenuMusic   = null;
 var g_pMenuSound   = null;
+var g_pMenuWarning = null;
 var g_pMenuLevel   = null;
 var g_pMenuScore   = null;
 
@@ -760,6 +761,7 @@ function SetupMenu()
     g_pMenuQuality = document.getElementById("quality");
     g_pMenuMusic   = document.getElementById("music");
     g_pMenuSound   = document.getElementById("sound");
+    g_pMenuWarning = document.getElementById("warning");
     g_pMenuLevel   = document.getElementById("text-level");
     g_pMenuScore   = document.getElementById("text-score");
 
@@ -817,6 +819,9 @@ function SetupMenu()
 
         // play sound effect
         if(g_bMusic) g_pSoundBump.Play(1.3);
+
+        // show warning
+        g_pMenuWarning.innerHTML = g_bMusic ? "" : "not recommended";
 
         // play or pause the current music stream
         if(g_iMusicStatus)
@@ -919,7 +924,7 @@ function SetMenuOpacity(iType, fOpacity)
     if(iType === C_MENU_MAIN)
     {
         // set main menu opacity
-        SetOpacity(g_pMenuJolt,   fOpacity);
+        if(g_bGameJolt) SetOpacity(g_pMenuJolt, fOpacity);
         SetOpacity(g_pMenuHeader, fOpacity);
         SetOpacity(g_pMenuLeft,   fOpacity);
         SetOpacity(g_pMenuRight,  fOpacity);
