@@ -894,6 +894,7 @@ cLevel.s_apInit[LVL] = function()
     {
         if(g_pBlock[i].m_bFlying) continue;
         g_pBlock[i].m_fHealth = 5.0;
+        g_pBlock[i].m_vPosition[1] -= C_BLOCK_DIST;
     }
 
     // re-sort first block line
@@ -949,7 +950,7 @@ cLevel.s_apFunction[LVL] = function()
     cLevel.s_aiStatus[2] = (cLevel.s_aiStatus[2] + g_fTime*3.0*fSpeed) % 20.0;
     cLevel.s_aiStatus[3] = cLevel.s_aiStatus[2]*C_BLOCK_DIST;
 
-    for(var i = 0; i < C_LEVEL_CENTER; ++i)
+    for(var i = 0; i < C_LEVEL_CENTER/2; ++i)
     {
         if(g_pBlock[i].m_bFlying) continue;
 
@@ -1931,12 +1932,15 @@ cLevel.s_apFunction[LVL] = function()
     }
 
     // fix glitchi glitch, where balls get stuck in the wall
-    for(var i = 0; i < C_BALLS; ++i)
+    if(fImplode >= 1.0)
     {
-        if(g_pBall[i].m_bActive && g_pBall[i].m_vPosition[1] > g_vWall[1]-C_BLOCK_DIST)
+        for(var i = 0; i < C_BALLS; ++i)
         {
-            vec2.copy(g_pBall[i].m_vPosition, C_BALL_START);
-            g_pBall[i].m_vDirection[1] = Math.abs(g_pBall[i].m_vDirection[1]);
+            if(g_pBall[i].m_bActive && g_pBall[i].m_vPosition[1] > g_vWall[1]-C_BLOCK_DIST)
+            {
+                vec2.copy(g_pBall[i].m_vPosition, C_BALL_START);
+                g_pBall[i].m_vDirection[1] = Math.abs(g_pBall[i].m_vDirection[1]);
+            }
         }
     }
 };

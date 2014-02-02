@@ -208,21 +208,6 @@ function Init()
         }
     }
 
-    // retrieve texture canvas and 2d context
-    g_pTexture = document.getElementById("texture");
-    TEX = g_pTexture.getContext("2d");
-
-    // retrieve audio stream and load first music file
-    g_pAudio = document.getElementById("stream");
-    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent];
-    g_pAudio.addEventListener("ended", function()
-    {
-        // play next music file
-        if(++g_iMusicCurrent >= C_MUSIC_FILE.length) g_iMusicCurrent = 0;
-        this.src = C_MUSIC_FILE[g_iMusicCurrent];
-        this.play();
-    });
-
     // enable depth testing
     GL.enable(GL.DEPTH_TEST);
     GL.depthFunc(GL.LEQUAL);
@@ -247,6 +232,21 @@ function Init()
     // reset scene
     GL.clearColor(0.333, 0.333, 0.333, 1.0);
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+
+    // retrieve texture canvas and 2d context
+    g_pTexture = document.getElementById("texture");
+    TEX = g_pTexture.getContext("2d");
+
+    // retrieve audio stream and load first music file
+    g_pAudio = document.getElementById("stream");
+    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent];
+    g_pAudio.addEventListener("ended", function()
+    {
+        // play next music file
+        if(++g_iMusicCurrent >= C_MUSIC_FILE.length) g_iMusicCurrent = 0;
+        this.src = C_MUSIC_FILE[g_iMusicCurrent];
+        this.play();
+    });
 
     // setup system components
     SetupMenu();
