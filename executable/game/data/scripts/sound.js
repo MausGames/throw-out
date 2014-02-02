@@ -15,6 +15,9 @@ cSound.s_pContext = null;   // audio context
 // ****************************************************************
 cSound.Init = function()
 {
+    // deactivates sound on offline-version, because some browsers disallow local XMLHttpRequests
+    if(window.location.protocol.substr(0, 4) === "file") return;
+
     // create audio context
     window.AudioContext = window.AudioContext || window.webkitAudioContext;
     if(window.AudioContext) cSound.s_pContext = new AudioContext();
@@ -74,6 +77,5 @@ cSound.prototype.Play = function(fPitch)
 cSound.prototype.SetVolume = function(fVolume)
 {
     if(!cSound.s_pContext) return;
-    
     this.m_pGain.gain.value = fVolume;
 };
