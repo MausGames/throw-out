@@ -1,11 +1,11 @@
-////////////////////////////////////////////////////
-//*----------------------------------------------*//
-//| Part of Throw Out (http://www.maus-games.at) |//
-//*----------------------------------------------*//
-//| Released under the zlib License              |//
-//| More information available in the README.md  |//
-//*----------------------------------------------*//
-////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+//*-----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at)  |//
+//*-----------------------------------------------*//
+//| Released under the zlib License               |//
+//| More information available in the readme file |//
+//*-----------------------------------------------*//
+/////////////////////////////////////////////////////
 
 
 // ****************************************************************
@@ -553,7 +553,7 @@ cBall.CreateBall = function(vPosition, vDirection, bFirst)
         {
             // activate and init new ball
             g_pBall[i].m_bActive = true;
-            vec2.set(g_pBall[i].m_vPosition,  vPosition[0],  vPosition[1]);
+            vec2.copy(g_pBall[i].m_vPosition, vPosition);
             vec2.normalize(g_pBall[i].m_vDirection, vDirection);
 
             // hide him on start

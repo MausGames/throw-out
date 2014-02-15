@@ -1,11 +1,11 @@
-////////////////////////////////////////////////////
-//*----------------------------------------------*//
-//| Part of Throw Out (http://www.maus-games.at) |//
-//*----------------------------------------------*//
-//| Released under the zlib License              |//
-//| More information available in the README.md  |//
-//*----------------------------------------------*//
-////////////////////////////////////////////////////
+/////////////////////////////////////////////////////
+//*-----------------------------------------------*//
+//| Part of Throw Out (http://www.maus-games.at)  |//
+//*-----------------------------------------------*//
+//| Released under the zlib License               |//
+//| More information available in the readme file |//
+//*-----------------------------------------------*//
+/////////////////////////////////////////////////////
 
 
 // ****************************************************************
@@ -824,7 +824,7 @@ function SetupMenu()
         g_pMenuWarning.innerHTML = g_bMusic ? "" : "not recommended";
 
         // play or pause the current music stream
-        if(g_iMusicStatus)
+        if(g_bMusicStatus)
         {
             if(g_bMusic) g_pAudio.play();
                     else g_pAudio.pause();
