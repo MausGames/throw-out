@@ -158,14 +158,13 @@ var g_bMusic   = true;                          // current music status
 var g_bSound   = true;                          // current sound status
 
 var g_bGameJolt     = false;                    // logged in on Game Jolt
-var g_fGameJoltPing = 0.0;                      // timer for Game Jolt user session ping
 var g_fGameJoltNeg  = 0.0;                      // negative points accumulated in the current level
 var g_fGameJoltFly  = 0.0;                      // time since the last paddle bump
 
 var g_iRequestID = 0;                           // ID from requestAnimationFrame()
 
-var g_mMatrix      = mat4.create();             // pre-allocated general purpose matrix
-var g_vVector      = vec4.create();             // pre-allocated general purpose vector
+var g_mMatrix = mat4.create();                  // pre-allocated general purpose matrix
+var g_vVector = vec4.create();                  // pre-allocated general purpose vector
 
 var g_vWeightedPos = vec2.create();             // pre-allocated weighted position for camera calculation
 var g_vAveragePos  = vec2.create();             // pre-allocated average position for camera calculation
@@ -185,8 +184,8 @@ function Init()
     // retrieve main canvas
     g_pCanvas = document.getElementById("canvas");
 
-    // define WebGL context properties (not necessary)
-    var abProperty = {alpha : true, depth : true, stencil : false, antialias : true,
+    // define WebGL context properties (with stencil buffer)
+    var abProperty = {alpha : true, depth : true, stencil : true, antialias : true,
                       premultipliedAlpha : true, preserveDrawingBuffer : false};
 
     // retrieve WebGL context
@@ -229,6 +228,10 @@ function Init()
     // disable dithering
     GL.disable(GL.DITHER);
 
+    // set static stencil-operation parameters
+    GL.stencilMask(255);
+    GL.clearStencil(128);
+
     // reset scene
     GL.clearColor(0.333, 0.333, 0.333, 1.0);
     GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
@@ -266,6 +269,7 @@ function Init()
     g_pSoundBump.SetVolume(0.3);
 
     // init object interfaces
+    cShadow.Init();
     cBackground.Init();
     cPlane.Init(true);
     cPaddle.Init(true);
@@ -315,6 +319,7 @@ window.addEventListener("beforeunload", function()   // Exit()
     window.cancelAnimationFrame(g_iRequestID);
     
     // exit object interfaces
+    cShadow.Exit();
     cBackground.Exit();
     cPlane.Exit();
     cPaddle.Exit();
@@ -394,6 +399,9 @@ function Render(iNewTime)
         for(var i = 0; i < C_LEVEL_CENTER; ++i)
             g_pBlock[i].Render();
     }
+
+    // apply shadow effect
+    if(g_bQuality) cShadow.Apply();
 
     // move application
     Move();
@@ -639,17 +647,6 @@ function Move()
     vec3.add(g_vCamTar, g_vCamTar, [g_vView[0]*0.5,          g_vView[1]*0.5,          fCameraZ]);
     mat4.lookAt(g_mCamera, g_vCamPos, g_vCamTar, [0.0, 0.0, 1.0]);
 
-    if(g_bGameJolt)
-    {
-        // ping Game Jolt user session
-        g_fGameJoltPing += g_fTime;
-        if(g_fGameJoltPing >= 30.0)
-        {
-            g_fGameJoltPing = 0.0;
-            GameJoltSessionPing();
-        }
-    }
-
     // request next frame
     GL.flush(); // just in case, but not required
     g_iRequestID = requestAnimationFrame(Render, g_pCanvas);
@@ -780,11 +777,14 @@ function SetupMenu()
     // implement quality button
     g_pMenuQuality.onmousedown = function()
     {
-        // change video quality
+        
         g_bQuality = !g_bQuality;
+        this.style.color = g_bQuality ? "" : "#444444";
+
+        // change video quality
         cPlane.Init(g_bQuality);
-        cPaddle.Init(g_bQuality);
-        cBlock.Init(g_bQuality);
+        cPaddle.Init(true);
+        cBlock.Init(true);
     };
 
     // implement fullscreen button (# IE works only with click-event, not with onmousedown)
@@ -850,6 +850,7 @@ function SetupMenu()
 
         // open Game Jolt user session (ignore check for valid credentials)
         GameJoltSessionOpen();
+        window.setInterval(GameJoltSessionPing, 30000);
     }
 }
 

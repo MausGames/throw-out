@@ -70,16 +70,16 @@ cBackground.prototype.Render = function()
     // enable the shader-program
     cBackground.s_pShader.Enable();
 
-    // check and update current alpha (check to reduce video brandwidth)
+    // check and update current alpha (check to reduce video bandwidth)
     if(cBackground.s_iSaveAlpha !== this.m_fAlpha) {cBackground.s_iSaveAlpha = this.m_fAlpha; GL.uniform1f(cBackground.s_pShader.m_iUniformAlpha, this.m_fAlpha);}
 
     // clear framebuffer and set alpha blending
     if(this.m_fAlpha === 1.0)
     {
         GL.disable(GL.BLEND);
-        GL.clear(GL.DEPTH_BUFFER_BIT);
+        GL.clear(GL.DEPTH_BUFFER_BIT | GL.STENCIL_BUFFER_BIT);
     }
-    else GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+    else GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT | GL.STENCIL_BUFFER_BIT);
 
     // render the model (from plane)
     GL.disable(GL.DEPTH_TEST);

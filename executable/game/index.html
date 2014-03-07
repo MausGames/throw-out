@@ -36,7 +36,7 @@
         <meta name="application-name" content="Throw Out" />
         <meta name="author" content="Martin Mauersics" />
         <meta name="description" content="Simple Breakout clone made with JavaScript and WebGL" />
-        <meta name="keywords" content="breakout, javascript, webgl, 3d, game, opensource" />
+        <meta name="keywords" content="breakout, javascript, webgl, 3d, game, open source" />
 
         <meta name="robots" content="index, follow" />
 
@@ -60,6 +60,7 @@
         <script src="data/scripts/ball.js"></script>
         <script src="data/scripts/block.js"></script>
 
+        <script src="data/scripts/shadow.js"></script>
         <script src="data/scripts/main.js"></script>
 
     </head>
@@ -84,53 +85,53 @@
         <img id="jolt" src="data/images/gamejolt_jolt.png" alt="Game Jolt" style="opacity: 0.0; position: absolute; right: 1.5%; bottom: 3.5%; height: 6%; " />
 
         <!-- Game Title -->
-        <div id="text-header" class="middle" style="font: 5.1em square; top: 26.2%;">
+        <div id="text-header" class="middle" style="font-size: 5.1em; top: 26.2%;">
             <font class="header">Throw Out</font>
         </div>
 
         <!-- Level Title -->
-        <div id="text-level" class="middle" style="font: 3.5em square; top: 28%;">
+        <div id="text-level" class="middle" style="font-size: 3.5em; top: 28%;">
             <font class="header"> </font>
         </div>
 
         <!-- Score Board -->
-        <div id="text-score" class="middle" style="font: 2.8em square; top: 15%;">
+        <div id="text-score" class="middle" style="font-size: 2.8em; top: 15%;">
             <font> </font>
         </div>
 
         <!-- First Option -->
-        <div id="text-option-1" class="middle" style="font: 2.8em square; top: 51.6%;">
+        <div id="text-option-1" class="middle" style="font-size: 2.8em; top: 51.6%;">
             <font id="start" class="button">Start Game</font>
         </div>
 
         <!-- Second Option -->
-        <div id="text-option-2" class="middle" style="font: 2.2em square; top: 61.6%;">
+        <div id="text-option-2" class="middle" style="font-size: 2.2em; top: 61.6%;">
             <font id="end"> </font>
         </div>
 
         <!-- Copyright -->
-        <div id="text-bottom-left" class="side" style="font: 1.8em square; left: 1%; bottom: 1%;">
-            <font>(c) 2014 <a href="http://www.maus-games.at" target="_blank">Maus Games</a> - v1.0</font>
+        <div id="text-bottom-left" class="side" style="font-size: 1.8em; left: 1%; bottom: 1%;">
+            <font>(c) 2014 <a href="http://www.maus-games.at" target="_blank">Maus Games</a> - v1.1</font>
         </div>
 
         <!-- Game Jolt / Music -->
-        <div id="text-bottom-right" class="side" style="font: 1.8em square; right: 1%; bottom: 1%;">
-            <!--font>Play on <a href="http://gamejolt.com/games/arcade/-/20444/" target="_blank">Game Jolt</a></font-->
+        <div id="text-bottom-right" class="side" style="font-size: 1.8em; right: 1%; bottom: 1%;">
+            <!-- font>Play on <a href="http://gamejolt.com/games/arcade/-/20444/" target="_blank">Game Jolt</a></font -->
             <font>Music by <a href="http://www.toucanmusic.co.uk/albums/toulp5.html" target="_blank">Psychadelik Pedestrian</a></font>
         </div>
 
         <!-- Video Configuration -->
-        <div id="text-top-right" class="side" style="font: 2.8em square; right: 1%; top: 1%;">
+        <div id="text-top-right" class="side" style="font-size: 2.8em; right: 1%; top: 1%;">
             <font id="fullscreen" class="button"><span title="Fullscreen" onmouseover="this.innerHTML='Fullscreen';" onmouseout="this.innerHTML='F';">F</span></font>&nbsp;&nbsp;
             <font id="quality" class="button"><span title="Quality" onmouseover="this.innerHTML='Quality';" onmouseout="this.innerHTML='Q';">Q</span></font>
         </div>
 
         <!-- Audio Configuration -->
-        <div id="text-top-left" class="side" style="font: 2.8em square; left: 1%; top: 1%;">
+        <div id="text-top-left" class="side" style="font-size: 2.8em; left: 1%; top: 1%;">
             <!-- &#9835; &#x1f50a; -->
             <font id="music" class="button"><span title="Music" onmouseover="this.innerHTML='Music';" onmouseout="this.innerHTML='M';">M</span></font>&nbsp;&nbsp;
             <font id="sound" class="button"><span title="Sound" onmouseover="this.innerHTML='Sound';" onmouseout="this.innerHTML='S';">S</span></font><br />
-            <font id="warning" style="font: 64% square;"></font>
+            <font id="warning" style="font-size: 64%;"></font>
         </div>
 
     </body>
