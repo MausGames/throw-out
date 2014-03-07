@@ -58,24 +58,15 @@ font
 {
     width: 640px;
     height: auto;
-    position: absolute;
     left: 50%;
     margin: 0 0 0 -320px;
     text-align: center;
-    opacity: 0.0;
-    pointer-events: none;
-
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
 }
 
-/* side division */
-.side
+/* centered and side division */
+.middle, .side
 {
+    font-family: square;
     position: absolute;
     opacity: 0.0;
     pointer-events: none;

@@ -283,7 +283,7 @@ cBall.prototype.Render = function()
     mat4.mul(g_mMatrix, g_mProjection, g_mMatrix);
     GL.uniformMatrix4fv(cBall.s_pShader.m_iUniformModelViewProj, false, g_mMatrix);
 
-    // check and update current alpha (check to reduce video brandwidth)
+    // check and update current alpha (check to reduce video bandwidth)
     if(cBall.s_iSaveAlpha !== this.m_fAlpha) {cBall.s_iSaveAlpha = this.m_fAlpha; GL.uniform1f(cBall.s_pShader.m_iUniformAlpha, this.m_fAlpha);}
 
     // render the model

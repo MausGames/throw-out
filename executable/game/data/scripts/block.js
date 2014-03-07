@@ -316,7 +316,7 @@ cBlock.prototype.Render = function()
     mat4.mul(g_mMatrix, g_mProjection, g_mMatrix);
     GL.uniformMatrix4fv(cBlock.s_pShader.m_iUniformModelViewProj, false, g_mMatrix);
     
-    // check and update current values (check to reduce video brandwidth)
+    // check and update current values (check to reduce video bandwidth)
     if(!CompareArray(cBlock.s_mSaveNormal, this.m_mNormal, 9)) {mat3.copy(cBlock.s_mSaveNormal, this.m_mNormal); GL.uniformMatrix3fv(cBlock.s_pShader.m_iUniformNormal, false, this.m_mNormal);}
     if(!CompareArray(cBlock.s_vSaveColor,  this.m_vColor,  4)) {vec4.copy(cBlock.s_vSaveColor,  this.m_vColor);  GL.uniform4f(cBlock.s_pShader.m_iUniformColor,                this.m_vColor[0], this.m_vColor[1], this.m_vColor[2], this.m_vColor[3]);}
     if(cBlock.s_iSaveType !== this.m_iType)                    {cBlock.s_iSaveType = this.m_iType;               GL.uniform1i(cBlock.s_iUniformType,                           this.m_iType);}

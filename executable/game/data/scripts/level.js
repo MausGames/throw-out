@@ -1202,8 +1202,7 @@ cLevel.s_apFunction[LVL] = function()
 };
 cLevel.s_apExit[LVL] = function()
 {
-    // reset block-rendering
-    g_bDepthSort = false;
+    // reset block-rendering in next level
 };
 
 
@@ -1253,7 +1252,10 @@ cLevel.s_asText[LVL] = "";
 
 cLevel.s_apInit[LVL] = function()
 {
-    // reset ball-position
+    // reset block-rendering
+    g_bDepthSort = false;
+
+    // reset ball-position for correct block-positions at the beginning
     vec2.copy(g_pBall[0].m_vPosition, C_BALL_START);
 };
 cLevel.s_apFunction[LVL] = function()
