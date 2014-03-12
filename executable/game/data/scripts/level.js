@@ -195,7 +195,7 @@ function LoadLevel(iLevelNum)
         }
         else
         {
-            // traverse all entries and distribute the types
+            // loop through all entries and distribute the types
             for(var i = 0; i < cLevel.s_aaiTyped[iLevelNum].length; ++i)
             {
                 var iCur = cLevel.s_aaiTyped[iLevelNum][i].iY*C_LEVEL_X + cLevel.s_aaiTyped[iLevelNum][i].iX;

@@ -58,21 +58,24 @@ var C_MUSIC_FILE =
 
 // ****************************************************************
 // get URL parameters (not very solid, but good enough)
-var QueryString = function()
+var asQueryParam = function()
 {
     var asOutput = {};
-    var asVar = window.location.search.substring(1).split("&");
+    var asList   = window.location.search.substring(1).split("&");
 
-    for(var i = 0; i < asVar.length; ++i)
+    // loop through all parameters
+    for(var i = 0; i < asList.length; ++i)
     {
-        var asPair = asVar[i].split("=");
+        // seperate key from value
+        var asPair = asList[i].split("=");
 
+        // insert value into map
         if(typeof asOutput[asPair[0]] === "undefined")
-            asOutput[asPair[0]] = asPair[1];
+            asOutput[asPair[0]] = asPair[1];                          // create new entry
         else if(typeof asOutput[asPair[0]] === "string")
-            asOutput[asPair[0]] = [asOutput[asPair[0]], asPair[1]];
+            asOutput[asPair[0]] = [asOutput[asPair[0]], asPair[1]];   // extend into array
         else
-            asOutput[asPair[0]].push(asPair[1]);
+            asOutput[asPair[0]].push(asPair[1]);                      // append to array
     }
 
     return asOutput;
@@ -227,10 +230,6 @@ function Init()
 
     // disable dithering
     GL.disable(GL.DITHER);
-
-    // set static stencil-operation parameters
-    GL.stencilMask(255);
-    GL.clearStencil(128);
 
     // reset scene
     GL.clearColor(0.333, 0.333, 0.333, 1.0);
@@ -420,7 +419,7 @@ function Move()
     if(g_iStatus === C_STATUS_INTRO)
     {
         // skip intro
-        if(QueryString["skip_intro"])
+        if(asQueryParam["skip_intro"])
         {
             g_fTotalTime = 20.0;
             g_fBlockTime = 1.3;
@@ -717,7 +716,7 @@ function SetupInput()
     }, false);
 
     // implement pause (# onkeypress doesn't get all keys)
-    document.onkeydown = function(pEvent)
+    document.addEventListener("keydown", function(pEvent)
     {
         pEvent   = window.event || pEvent;
         var iKey = pEvent.charCode || pEvent.keyCode;
@@ -732,10 +731,10 @@ function SetupInput()
         // check for enter, escape and whitespace
         if(iKey === 13 || iKey === 27 || iKey === 32)
             ActivatePause(true);
-    };
+    }, false);
 
     // implement auto-pause if window-focus is lost
-    window.onblur = function() {ActivatePause(true);};
+    window.addEventListener("blur", function() {ActivatePause(true);}, false);
 }
 
 
@@ -775,7 +774,7 @@ function SetupMenu()
     };
 
     // implement quality button
-    g_pMenuQuality.onmousedown = function()
+    g_pMenuQuality.addEventListener("mousedown", function()
     {
         
         g_bQuality = !g_bQuality;
@@ -785,7 +784,7 @@ function SetupMenu()
         cPlane.Init(g_bQuality);
         cPaddle.Init(true);
         cBlock.Init(true);
-    };
+    }, false);
 
     // implement fullscreen button (# IE works only with click-event, not with onmousedown)
     g_pMenuFull.addEventListener("click", function()
@@ -812,7 +811,7 @@ function SetupMenu()
     }, false);
 
     // implement volume buttons (# hope the color-effect is clear, had some troubles with range-element and unicode support)
-    g_pMenuMusic.onmousedown = function()
+    g_pMenuMusic.addEventListener("mousedown", function()
     {
         g_bMusic = !g_bMusic;
         this.style.color = g_bMusic ? "" : "#444444";
@@ -829,23 +828,23 @@ function SetupMenu()
             if(g_bMusic) g_pAudio.play();
                     else g_pAudio.pause();
         }
-    };
-    g_pMenuSound.onmousedown = function()
+    }, false);
+    g_pMenuSound.addEventListener("mousedown", function()
     {
         g_bSound = !g_bSound;
         this.style.color = g_bSound ? "" : "#444444";
 
         // play sound effect
         if(g_bSound) g_pSoundBump.Play(1.0);
-    };
+    }, false);
 
     // adjust back button
-    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (QueryString["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
+    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (asQueryParam["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
 
-    if(QueryString["gjapi_username"] && QueryString["gjapi_token"])
+    if(asQueryParam["gjapi_username"] && asQueryParam["gjapi_token"])
     {
         // set Game Jolt user string
-        g_pMenuRight.innerHTML = "<font>Logged in as " + QueryString["gjapi_username"] + "</font>";
+        g_pMenuRight.innerHTML = "<font>Logged in as " + asQueryParam["gjapi_username"] + "</font>";
         g_bGameJolt = true;
 
         // open Game Jolt user session (ignore check for valid credentials)
@@ -859,9 +858,9 @@ function SetupMenu()
 function Resize()
 {
     // resize canvas
-    g_pCanvas.width  = window.innerWidth  - (QueryString["launcher"]  ? 2 : 0);
-    g_pCanvas.height = window.innerHeight - (QueryString["launcher"]  ? 2 : 0);
-    if(QueryString["launcher"] ) g_pCanvas.style.marginTop = "1px";
+    g_pCanvas.width  = window.innerWidth  - (asQueryParam["launcher"]  ? 2 : 0);
+    g_pCanvas.height = window.innerHeight - (asQueryParam["launcher"]  ? 2 : 0);
+    if(asQueryParam["launcher"] ) g_pCanvas.style.marginTop = "1px";
 
     // resize font
     document.body.style.fontSize = (g_pCanvas.height/800.0)*100.0 + "%";
@@ -1043,7 +1042,7 @@ function ActivateFail()
     // set option elements and implement application restart and return
     var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location;
     g_pMenuOption1.innerHTML = "<font id='start' class='button'><a href='" + sSkip + "'>Restart</a></font>";
-    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (QueryString["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
+    g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (asQueryParam["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
 
     // enable the fail menu (opacity is faded in Move())
     SetMenuEnable(C_MENU_FAIL, true);

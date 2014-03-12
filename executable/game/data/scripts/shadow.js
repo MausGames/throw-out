@@ -81,6 +81,10 @@ cShadow.Init = function()
 
     // force update
     cShadow.s_mSaveNormal[0] = 0.0;
+
+    // set static stencil-operation parameters (# also WebGL context has to be created with a stencil buffer, may not be present on experimental context)
+    GL.stencilMask(255);
+    GL.clearStencil(128);
 };
 
 
@@ -111,8 +115,8 @@ cShadow.Apply = function()
     GL.colorMask(false, false, false, false);
     GL.depthMask(false);
 
-    // set stencil operations to always increase on successful backface writing and
-    // decrease on successful frontface writing, combined with depth testing to "map" shadow onto intersecting surfaces
+    // set stencil operations to always imcrement on successful backface writing and
+    // decrement on successful frontface writing, combined with depth testing to "map" shadow onto intersecting surfaces
     GL.stencilOpSeparate(GL.BACK,  GL.KEEP, GL.KEEP, GL.INCR);
     GL.stencilOpSeparate(GL.FRONT, GL.KEEP, GL.KEEP, GL.DECR);
     GL.stencilFunc(GL.ALWAYS, 0, 255);
