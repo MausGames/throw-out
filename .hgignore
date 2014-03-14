@@ -3,9 +3,5 @@ projects\netbeans\nbproject\private\private.properties
 projects\netbeans\nbproject\private\private.xml
 projects\netbeans\nbproject\private\retriever\catalog.xml
 projects\netbeans\nbproject\private\retriever\creativecommons.org\ns.xml
-executable\game\data\music\Catch_My_Fall.ogg
-executable\game\data\music\Fifth_World.ogg
-executable\game\data\music\Nocturnia.ogg
+executable\game\data\music\*.ogg
 backup/
-executable_packed/
-material/
