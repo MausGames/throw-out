@@ -203,69 +203,27 @@ function Init()
             // show error page
             document.body.style.background = "#FAFAFF";
             document.body.innerHTML = "<p style='font: bold 16px sans-serif; position: absolute; left: 50%; top: 49%; width: 400px; height: 140px; margin: -70px 0 0 -200px; text-align: center;'>" +
-                                      "<img src='data/images/webgl_logo.png'/><br/>" +
+                                      "<img src='data/images/webgl_logo.png' alt='WebGL' /><br/>" +
                                       "Your browser sucks and doesn't support WebGL.<br/>" +
                                       "Visit <a href='http://get.webgl.org/' style='color: blue;'>http://get.webgl.org/</a> for more information.</p>";
             return;
         }
     }
 
-    // enable depth testing
-    GL.enable(GL.DEPTH_TEST);
-    GL.depthFunc(GL.LEQUAL);
-    GL.polygonOffset(1.1, 4.0);
-    GL.clearDepth(1.0);
-
-    // enable culling
-    GL.enable(GL.CULL_FACE);
-    GL.cullFace(GL.BACK);
-    GL.frontFace(GL.CCW);
-
-    // enable alpha blending
-    GL.enable(GL.BLEND);
-    GL.blendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
-
-    // enable flipped texture loading
-    GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, true);
-
-    // disable dithering
-    GL.disable(GL.DITHER);
-
-    // reset scene
-    GL.clearColor(0.333, 0.333, 0.333, 1.0);
-    GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
-
     // retrieve texture canvas and 2d context
     g_pTexture = document.getElementById("texture");
     TEX = g_pTexture.getContext("2d");
 
-    // retrieve audio stream and load first music file
-    g_pAudio = document.getElementById("stream");
-    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent];
-    g_pAudio.addEventListener("ended", function()
-    {
-        // play next music file
-        if(++g_iMusicCurrent >= C_MUSIC_FILE.length) g_iMusicCurrent = 0;
-        this.src = C_MUSIC_FILE[g_iMusicCurrent];
-        this.play();
-    });
-
     // setup system components
+    SetupVideo();
+    SetupAudio();
+    SetupInput();
     SetupMenu();
     SetupRefresh();
-    SetupInput();
 
     // resize everything dynamically
     document.body.onresize = Resize;
     Resize();
-
-    // init model class
-    cModel.Init();
-
-    // init sound class and sound files
-    cSound.Init();
-    g_pSoundBump = new cSound("data/sounds/bump.wav");
-    g_pSoundBump.SetVolume(0.3);
 
     // init object interfaces
     cShadow.Init();
@@ -275,14 +233,12 @@ function Init()
     cBall.Init();
     cBlock.Init(true);
 
-    // create background
+    // create background and plane
     g_pBackground = new cBackground();
-
-    // create plane
-    g_pPlane = new cPlane();
+    g_pPlane      = new cPlane();
 
     // create paddles (and walls)
-    g_pPaddle = new Array(4);
+    g_pPaddle    = new Array(4);
     g_pPaddle[0] = new cPaddle([ 0.0,  1.0]);
     g_pPaddle[1] = new cPaddle([ 0.0, -1.0]);
     g_pPaddle[2] = new cPaddle([ 1.0,  0.0]);
@@ -661,31 +617,56 @@ function InTransition()
 
 
 // ****************************************************************
-function SetupRefresh()
+function SetupVideo()
 {
-    var iLastTime = 0;
-    var asVendor  = ['moz', 'webkit', 'ms', 'o'];
+    // enable depth testing
+    GL.enable(GL.DEPTH_TEST);
+    GL.depthFunc(GL.LEQUAL);
+    GL.polygonOffset(1.1, 4.0);
+    GL.clearDepth(1.0);
 
-    // unify different animation functions
-    for(var i = 0; i < asVendor.length && !window.requestAnimationFrame; ++i)
+    // enable culling
+    GL.enable(GL.CULL_FACE);
+    GL.cullFace(GL.BACK);
+    GL.frontFace(GL.CCW);
+
+    // enable alpha blending
+    GL.enable(GL.BLEND);
+    GL.blendFunc(GL.SRC_ALPHA, GL.ONE_MINUS_SRC_ALPHA);
+
+    // enable flipped texture loading
+    GL.pixelStorei(GL.UNPACK_FLIP_Y_WEBGL, true);
+
+    // disable dithering
+    GL.disable(GL.DITHER);
+
+    // reset scene
+    GL.clearColor(0.333, 0.333, 0.333, 1.0);
+    GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
+
+    // init model class
+    cModel.Init();
+}
+    
+    
+// ****************************************************************
+function SetupAudio()
+{
+    // retrieve audio stream and load first music file
+    g_pAudio = document.getElementById("stream");
+    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent];
+    g_pAudio.addEventListener("ended", function()
     {
-        window.requestAnimationFrame = window[asVendor[i]+'RequestAnimationFrame'];
-        window.cancelAnimationFrame  = window[asVendor[i]+'CancelAnimationFrame'] || window[asVendor[i]+'CancelRequestAnimationFrame'];
-    }
-
-    // implement alternatives on missing animation functions
-    if(!window.requestAnimationFrame)
-    {
-        window.requestAnimationFrame = function(pCallback)
-        {
-            var iCurTime = new Date().getTime();
-            var iTime    = Math.max(0, 16 - (iCurTime - iLastTime));
-
-            iLastTime = iCurTime + iTime;
-            return window.setTimeout(function() {pCallback(iLastTime);}, iTime);
-        };
-        window.cancelAnimationFrame = function(iID) {clearTimeout(iID);};
-    }
+        // play next music file
+        if(++g_iMusicCurrent >= C_MUSIC_FILE.length) g_iMusicCurrent = 0;
+        this.src = C_MUSIC_FILE[g_iMusicCurrent];
+        this.play();
+    });
+    
+    // init sound class and sound files
+    cSound.Init();
+    g_pSoundBump = new cSound("data/sounds/bump.wav");
+    g_pSoundBump.SetVolume(0.3);
 }
 
 
@@ -855,11 +836,40 @@ function SetupMenu()
 
 
 // ****************************************************************
+function SetupRefresh()
+{
+    var iLastTime = 0;
+    var asVendor  = ['moz', 'webkit', 'ms', 'o'];
+
+    // unify different animation functions
+    for(var i = 0; i < asVendor.length && !window.requestAnimationFrame; ++i)
+    {
+        window.requestAnimationFrame = window[asVendor[i]+'RequestAnimationFrame'];
+        window.cancelAnimationFrame  = window[asVendor[i]+'CancelAnimationFrame'] || window[asVendor[i]+'CancelRequestAnimationFrame'];
+    }
+
+    // implement alternatives on missing animation functions
+    if(!window.requestAnimationFrame)
+    {
+        window.requestAnimationFrame = function(pCallback)
+        {
+            var iCurTime = new Date().getTime();
+            var iTime    = Math.max(0, 16 - (iCurTime - iLastTime));
+
+            iLastTime = iCurTime + iTime;
+            return window.setTimeout(function() {pCallback(iLastTime);}, iTime);
+        };
+        window.cancelAnimationFrame = function(iID) {clearTimeout(iID);};
+    }
+}
+
+
+// ****************************************************************
 function Resize()
 {
     // resize canvas
-    g_pCanvas.width  = window.innerWidth  - (asQueryParam["launcher"]  ? 2 : 0);
-    g_pCanvas.height = window.innerHeight - (asQueryParam["launcher"]  ? 2 : 0);
+    g_pCanvas.width  = window.innerWidth  - (asQueryParam["launcher"] ? 2 : 0);
+    g_pCanvas.height = window.innerHeight - (asQueryParam["launcher"] ? 2 : 0);
     if(asQueryParam["launcher"] ) g_pCanvas.style.marginTop = "1px";
 
     // resize font
