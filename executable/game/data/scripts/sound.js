@@ -29,7 +29,7 @@ function cSound(sURL)
 {
     if(!cSound.s_pContext) return;
 
-    // create asynchron request to load a sound file
+    // create asynchronous request to load a sound file
     var pRequest = new XMLHttpRequest();
     pRequest.open("GET", sURL, true);
     pRequest.responseType = "arraybuffer";
