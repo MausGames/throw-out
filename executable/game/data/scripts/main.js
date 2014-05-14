@@ -123,7 +123,7 @@ var g_bMusicStatus  = false;                    // music activated in the level 
 
 var g_mProjection = mat4.create();              // global projection matrix
 var g_mCamera     = mat4.create();              // global camera matrix
-var g_vView       = vec2.clone(C_BALL_START);   // current postion and view of the camera
+var g_vView       = vec2.clone(C_BALL_START);   // current position and view of the camera
 var g_fCamAngle   = 0.0;                        // azimuth of the camera
 var g_fCamAcc     = 1.0;                        // camera move acceleration (to enable smoother targeting when creating new balls)
 
@@ -160,9 +160,9 @@ var g_bQuality = true;                          // current quality level
 var g_bMusic   = true;                          // current music status
 var g_bSound   = true;                          // current sound status
 
-var g_bGameJolt     = false;                    // logged in on Game Jolt
-var g_fGameJoltNeg  = 0.0;                      // negative points accumulated in the current level
-var g_fGameJoltFly  = 0.0;                      // time since the last paddle bump
+var g_bGameJolt    = false;                     // logged in on Game Jolt
+var g_fGameJoltNeg = 0.0;                       // negative points accumulated in the current level
+var g_fGameJoltFly = 0.0;                       // time since the last paddle bump
 
 var g_iRequestID = 0;                           // ID from requestAnimationFrame()
 
@@ -175,10 +175,10 @@ var g_vCamPos      = vec3.create();             // pre-allocated camera position
 var g_vCamTar      = vec3.create();             // pre-allocated camera target
 
 var g_pBackground = null;
-var g_pPlane  = null;                           // plane object
-var g_pPaddle = null;                           // paddle/wall object array
-var g_pBall   = null;                           // ball object array
-var g_pBlock  = null;                           // block object array
+var g_pPlane      = null;                       // plane object
+var g_pPaddle     = null;                       // paddle/wall object array
+var g_pBall       = null;                       // ball object array
+var g_pBlock      = null;                       // block object array
 
 
 // ****************************************************************
@@ -757,7 +757,6 @@ function SetupMenu()
     // implement quality button
     g_pMenuQuality.addEventListener("mousedown", function()
     {
-        
         g_bQuality = !g_bQuality;
         this.style.color = g_bQuality ? "" : "#444444";
 
@@ -928,8 +927,8 @@ function SetMenuOpacity(iType, fOpacity)
     // set option element opacity
     SetOpacity(g_pMenuOption1, fOpacity);
     SetOpacity(g_pMenuOption2, fOpacity);
-    SetOpacity(g_pMenuTop,    fOpacity);
-    SetOpacity(g_pMenuVolume, fOpacity);
+    SetOpacity(g_pMenuTop,     fOpacity);
+    SetOpacity(g_pMenuVolume,  fOpacity);
 
     if(iType === C_MENU_MAIN)
     {
@@ -962,8 +961,8 @@ function SetMenuEnable(iType, bEnabled)
     // enable or disable option element interaction
     g_pMenuOption1.style.pointerEvents = sValue;
     g_pMenuOption2.style.pointerEvents = sValue;
-    g_pMenuTop.style.pointerEvents    = sValue;
-    g_pMenuVolume.style.pointerEvents = sValue;
+    g_pMenuTop.style.pointerEvents     = sValue;
+    g_pMenuVolume.style.pointerEvents  = sValue;
 
     if(iType === C_MENU_MAIN)
     {

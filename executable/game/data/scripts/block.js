@@ -219,11 +219,10 @@ cBlock.s_sFragmentShader =
 ""                                                                                                          +
 "    fIntensity  = min(fIntensity, 1.5);"                                                                   +
 "    fIntensity *= dot(normalize(v_v3Normal), v3Light)*0.5+0.5;"                                            +
-
 ""                                                                                                          +
 "    if(u_iType != 0)"                                                                                      + // still faster than a texture
 "    {"                                                                                                     +
-"        if(u_iType == 1) {if(v_v3NormalTrue.z > 0.99)                                 fIntensity *= 0.2;}" +
+"        if(u_iType == 1) {if(v_v3NormalTrue.z > 0.99)                                 fIntensity *= 0.2;}" + // no anti-aliasing, smoothstep would be better
 "                    else {if(v_v3NormalTrue.z > 0.92 && abs(v_v3NormalTrue.y) < 0.05) fIntensity *= 0.2;}" +
 "    }"                                                                                                     +
 ""                                                                                                          +
