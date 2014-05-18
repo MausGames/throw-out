@@ -6,6 +6,7 @@
 //| More information available in the readme file |//
 //*-----------------------------------------------*//
 /////////////////////////////////////////////////////
+"use strict";
 
 
 // ****************************************************************
@@ -174,6 +175,10 @@ cShadow.Apply = function()
 
         // adapt the transformation matrix
         cShadow.AdaptMatrix(g_mMatrix, pPaddle.m_mTransform);
+        g_mMatrix[4] = g_mMatrix[4] * 0.96;
+        g_mMatrix[5] = g_mMatrix[5] * 0.96;
+        g_mMatrix[6] = g_mMatrix[6] * 0.96;
+        g_mMatrix[7] = g_mMatrix[7] * 0.96;
 
         // update model-view matrices
         mat4.mul(g_mMatrix, cShadow.s_vPreViewProj, g_mMatrix);

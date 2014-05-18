@@ -6,6 +6,7 @@
 //| More information available in the readme file |//
 //*-----------------------------------------------*//
 /////////////////////////////////////////////////////
+"use strict";
 
 
 // ****************************************************************
@@ -1112,21 +1113,21 @@ function TimeBits(n, o)   // o = new Array(13)
 
     for(var i = 0; i < 13; ++i) o[i] = false;
 
-    o[02] = true;
-    o[07] = true;
+    o[ 2] = true;
+    o[ 7] = true;
     o[12] = true;
-    if(n === 2 || n === 6 || n === 8 || n === 0) o[08] = true;
-    if(n !== 5 && n !== 6)                       o[04] = true;
-    if(n !== 2)                                  o[09] = true;
+    if(n === 2 || n === 6 || n === 8 || n === 0) o[ 8] = true;
+    if(n !== 5 && n !== 6)                       o[ 4] = true;
+    if(n !== 2)                                  o[ 9] = true;
     if(n !== 1)
     {
-        o[00] = true;
-        if(n !== 4) o[01] = true;
+        o[ 0] = true;
+        if(n !== 4) o[ 1] = true;
         if(n !== 7)
         {
-            o[05] = true;
-            if(n !== 0)            o[06] = true;
-            if(n !== 2 && n !== 3) o[03] = true;
+            o[ 5] = true;
+            if(n !== 0)            o[ 6] = true;
+            if(n !== 2 && n !== 3) o[ 3] = true;
             if(n !== 4)
             {
                 o[10] = true;
