@@ -1,7 +1,7 @@
 syntax: glob
+backup/
 projects/netbeans/nbproject/private/private.properties
 projects/netbeans/nbproject/private/private.xml
 projects/netbeans/nbproject/private/retriever/catalog.xml
 projects/netbeans/nbproject/private/retriever/creativecommons.org/ns.xml
 executable/game/data/music/*.ogg
-backup/

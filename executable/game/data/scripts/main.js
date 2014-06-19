@@ -744,7 +744,7 @@ function SetupMenu()
     g_pMenuScore   = document.getElementById("text-score");
 
     // implement start button
-    g_pMenuStart.onmousedown = function()
+    g_pMenuStart.addEventListener("mousedown", function()
     {
         if(g_iStatus === C_STATUS_MAIN)
         {
@@ -753,7 +753,7 @@ function SetupMenu()
             SetCursor(true);
             g_iStatus = C_STATUS_GAME;
         }
-    };
+    }, false);
 
     // implement quality button
     g_pMenuQuality.addEventListener("mousedown", function()
