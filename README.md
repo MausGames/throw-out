@@ -10,7 +10,7 @@ Throw Out is a **browser-based arcade game** with fast 3d graphics and a unique 
 > - playable in every modern browser, even on mobile devices
 > - simple but fluid 3d graphics without plugins, fullscreen mode included
 
-You can play the game [on Game Jolt][1].
+You can play the game on [Game Jolt][1].
 
 
 [1]: http://gamejolt.com/games/arcade/throw-out/20444/
