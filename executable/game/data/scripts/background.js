@@ -18,7 +18,6 @@ cBackground.s_sVertexShader =
 "{"                                           +
 "    gl_Position  = vec4(a_v3Position, 1.0);" +
 "    v_v2Relative = a_v3Position.xy;"         +
-""                                            +
 "}";
 
 cBackground.s_sFragmentShader =
