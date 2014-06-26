@@ -10,7 +10,11 @@ Throw Out is a **browser-based arcade game** with fast 3d graphics and a unique 
 > - playable in every modern browser, even on mobile devices
 > - simple but fluid 3d graphics without plugins, fullscreen mode included
 
-You can play the game on [Game Jolt][1].
+#
 
+**Browser Version:**  
+<http://gamejolt.com/games/arcade/throw-out/20444/>
 
-[1]: http://gamejolt.com/games/arcade/throw-out/20444/
+**Music:**  
+by Psychadelik Pedestrian (<http://www.toucanmusic.co.uk/albums/toulp5.html>)  
+Licensed under CC BY-NC (<http://creativecommons.org/licenses/by-nc/3.0/>)

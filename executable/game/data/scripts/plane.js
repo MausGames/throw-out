@@ -34,7 +34,6 @@ cPlane.s_sVertexShader =
 "    v_v2TexCoord = a_v3Position.xy*0.042857143 + 0.5;"             + // 3.0/70.0 = 0.042857143
 ""                                                                  +
 "    gl_Position = u_m4ModelViewProj * vec4(a_v3Position, 1.0);"    +
-""                                                                  +
 "}";
 
 cPlane.s_sFragmentShader =

@@ -2045,3 +2045,4 @@ cLevel.s_apExit[LVL] = function()
 // Snake-like block animation
 // Boss: indestructible life-bar on top (green -> red)
 // Creation of new blocks during the level
+// Rain-like animation + new blocks spawn from below around the "rain-drop"

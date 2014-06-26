@@ -270,7 +270,7 @@ cPaddle.s_sVertexShader =
 cPaddle.s_sFragmentShader =
 "precision mediump float;"                                                    +
 ""                                                                            +
-"uniform vec3 u_v4Color;"                                                     + // only vec3, but named as vec4 for uniform-name-retrival
+"uniform vec3 u_v4Color;"                                                     + // only vec3, but named as vec4 for uniform-name-retrieval
 "varying vec3 v_v3Relative;"                                                  +
 "varying vec3 v_v3Normal;"                                                    +
 ""                                                                            +

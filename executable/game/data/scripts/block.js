@@ -344,7 +344,7 @@ cBlock.prototype.Move = function()
         this.m_vFlyDir[1] *= fFactor;
         this.m_vFlyDir[2] -= 50.0*g_fBlockTime;
 
-        // increae current fly-time for rotation
+        // increase current fly-time for rotation
         this.m_fFlyTime += g_fBlockTime*5.0;
 
         // fade out the object
