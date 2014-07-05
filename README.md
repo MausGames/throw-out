@@ -1,6 +1,6 @@
 # Throw Out
 
-**Simple Breakout clone made with JavaScript and WebGL.**
+**Simple Breakout clone made with JavaScript and WebGL**
 
 Based on the popular bat-and-ball gameplay, you have to kick colorful blocks off the platform, keep your balls together and get suprised by interesting and challenging levels.
 

@@ -667,7 +667,7 @@ function SetupAudio()
     // init sound class and sound files
     cSound.Init();
     g_pSoundBump = new cSound("data/sounds/bump.wav");
-    g_pSoundBump.SetVolume(0.3);
+    g_pSoundBump.SetVolume(0.25);
 }
 
 
