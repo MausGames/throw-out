@@ -161,7 +161,6 @@ var g_bQuality = true;                          // current quality level
 var g_bMusic   = true;                          // current music status
 var g_bSound   = true;                          // current sound status
 
-var g_bGameJolt    = false;                     // logged in on Game Jolt
 var g_fGameJoltNeg = 0.0;                       // negative points accumulated in the current level
 var g_fGameJoltFly = 0.0;                       // time since the last paddle bump
 
@@ -268,9 +267,6 @@ window.addEventListener("beforeunload", function()   // Exit()
 {
     if(!GL) return;
 
-    // close Game Jolt user session (may not work)
-    if(g_bGameJolt) GameJoltSessionClose();
-    
     // cancel last animation frame
     window.cancelAnimationFrame(g_iRequestID);
     
@@ -466,7 +462,7 @@ function Move()
         if(g_fLevelTime >= C_LEVEL_TIME && g_iActiveTime === 2)
         {
             // add time out trophy (but not on speed-level)
-            if(g_bGameJolt && g_iLevel !== 10) GameJoltTrophyAchieve(5741);
+            if(GJAPI.bActive && g_iLevel !== 10) GJAPI.TrophyAchieve(5741);
 
             // finish level
             NextLevel(false);
@@ -521,7 +517,7 @@ function Move()
             // no ball active and no level transition means player failed (game ends!)
             if(!InTransition())
             {
-                if(g_bGameJolt && g_iLevel < 13)   // not on barrier and final level
+                if(GJAPI.bActive && g_iLevel < 13)   // not on barrier and final level
                 {
                     // get number of active blocks
                     var iBlocks = 0;
@@ -529,7 +525,7 @@ function Move()
                         if(!g_pBlock[i].m_bFlying) ++iBlocks;
 
                     // check and add trophy
-                    if(0 < iBlocks && iBlocks <= 5) GameJoltTrophyAchieve(5778);
+                    if(0 < iBlocks && iBlocks <= 5) GJAPI.TrophyAchieve(5778);
                 }
                 
                 // reduce chances, skip level or activate fail screen
@@ -553,7 +549,7 @@ function Move()
         if(g_iActiveMulti === 1) g_iActiveMulti = 2;
         g_fStatMulti = (1.0 + Math.max(Math.floor(fNum-1.0), 0.0)*0.5) * (1.0 + Math.max(g_iLevel-2, 0)*0.1);
 
-        if(g_bGameJolt)
+        if(GJAPI.bActive)
         {
             // increase paddle-hit time
             var fOldFly = g_fGameJoltFly;
@@ -561,7 +557,7 @@ function Move()
 
             // long time not touched, add trophy (only-1-send switch behind function)
             if(g_fGameJoltFly >= 15.0 && fOldFly < 20.0)
-                GameJoltTrophyAchieve(5779);
+                GJAPI.TrophyAchieve(5779);
         }
     }
     if(g_iStatus === C_STATUS_FAIL) vec2.set(g_vAveragePos, 0.0, 0.0);
@@ -704,10 +700,10 @@ function SetupInput()
         var iKey = pEvent.charCode || pEvent.keyCode;
 
         // add hidden trophy
-        if(g_bGameJolt && g_iStatus <= C_STATUS_MAIN)
+        if(GJAPI.bActive && g_iStatus <= C_STATUS_MAIN)
         {
             // check for M key
-            if(iKey === 77) GameJoltTrophyAchieve(5739);
+            if(iKey === 77) GJAPI.TrophyAchieve(5739);
         }
 
         // check for enter, escape and whitespace
@@ -822,15 +818,10 @@ function SetupMenu()
     // adjust back button
     g_pMenuOption2.innerHTML = "<font id='end'><a href='javascript:history.go(-" + (asQueryParam["launcher"] ? 2 : 1) + ")'>Go Back</a></font>";
 
-    if(asQueryParam["gjapi_username"] && asQueryParam["gjapi_token"])
+    if(GJAPI.bActive)
     {
         // set Game Jolt user string
-        g_pMenuRight.innerHTML = "<font>Logged in as " + asQueryParam["gjapi_username"] + "</font>";
-        g_bGameJolt = true;
-
-        // open Game Jolt user session (ignore check for valid credentials)
-        GameJoltSessionOpen();
-        window.setInterval(GameJoltSessionPing, 30000);
+        g_pMenuRight.innerHTML = "<font>Logged in as " + GJAPI.sUserName + "</font>";
     }
 }
 
@@ -934,7 +925,7 @@ function SetMenuOpacity(iType, fOpacity)
     if(iType === C_MENU_MAIN)
     {
         // set main menu opacity
-        if(g_bGameJolt) SetOpacity(g_pMenuJolt, fOpacity);
+        if(GJAPI.bActive) SetOpacity(g_pMenuJolt, fOpacity);
         SetOpacity(g_pMenuHeader, fOpacity);
         SetOpacity(g_pMenuLeft,   fOpacity);
         SetOpacity(g_pMenuRight,  fOpacity);
@@ -1047,7 +1038,7 @@ function ActivateFail()
     g_pMenuScore.innerHTML = "<font>Thank you for playing!<br /><br />Final Score:<br />" + IntToString(g_iScore.toFixed(0), 6) +"</font>";
 
     // send score to Game Jolt
-    if(g_bGameJolt) GameJoltScoreAdd();
+    if(GJAPI.bActive) GJAPI.ScoreAdd(21033, g_iScore.toFixed(0), g_iScore.toFixed(0) + " Points (L" + ((g_iLevel >= C_LEVEL_NUM-1) ? "!" : (g_iLevel+1)) + ")", g_fTotalTime.toFixed(2));
 
     // set option elements and implement application restart and return
     var sSkip = (window.location.href.indexOf("skip_intro") < 0) ? (window.location + (window.location.search ? "&" : "?") + "skip_intro=1") : window.location;
