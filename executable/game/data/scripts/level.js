@@ -735,7 +735,7 @@ cLevel.s_asText[LVL] = "";
 cLevel.s_apInit[LVL] = function()
 {
     // add progress trophy
-    if(g_bGameJolt) GameJoltTrophyAchieve(5780);
+    if(GJAPI.bActive) GJAPI.TrophyAchieve(5780);
 };
 cLevel.s_apFunction[LVL] = function()
 {
@@ -2032,7 +2032,7 @@ cLevel.s_apFunction[LVL] = function()
 cLevel.s_apExit[LVL] = function()
 {
     // add final trophy
-    if(g_bGameJolt) GameJoltTrophyAchieve(5543);
+    if(GJAPI.bActive) GJAPI.TrophyAchieve(5543);
 
     // finished the game
     ActivateFail();
