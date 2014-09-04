@@ -213,8 +213,9 @@ cBall.s_sFragmentShader =
 "    gl_FragColor = vec4(vec3(fIntensity), u_fAlpha);"                        +
 "}";
 
-var C_BALL_SIZE  = 0.9;
-var C_BALL_START = vec2.fromValues(0.0, -32.0);
+var C_BALL_SIZE     = 0.9;
+var C_BALL_START    = vec2.fromValues(0.0, -32.0);
+var C_BALL_DISPLACE = 3.0;
 
 
 // ****************************************************************
@@ -316,11 +317,11 @@ cBall.prototype.Move = function()
     // destroy on zero visibility (too far away from plane or fade-out after level was finished)
     if(this.m_fAlpha <= 0.0)
     {
-        if(g_bGameJolt)
+        if(GJAPI.bActive)
         {
             // ball lost too fast, add trophy
             if(!InTransition() && this.m_fLifeTime < 5.0)
-                GameJoltTrophyAchieve(5740);
+                GJAPI.TrophyAchieve(5740);
         }
 
         this.m_bActive = false;
@@ -388,7 +389,7 @@ cBall.prototype.Move = function()
             cBall.s_vPreBurst[iDir] = -Signf(vDiff[iDir]);
 
             // move ball away from the block (vDiff not normalized)
-            var fTime = g_fTime*3.0;
+            var fTime = g_fTime * C_BALL_DISPLACE;
             this.m_vPosition[0] += vDiff[0]*fTime;
             this.m_vPosition[1] += vDiff[1]*fTime;
             
@@ -423,12 +424,12 @@ cBall.prototype.Move = function()
                                 g_iScore += fScore;
 
                                 // accumulate negative score
-                                if(g_bGameJolt)
+                                if(GJAPI.bActive)
                                 {
                                     // negative score too high, add trophy (only-1-send switch behind function)
                                     if(fScore < 0.0) g_fGameJoltNeg += fScore;
                                     if(g_fGameJoltNeg <= -100.0)
-                                        GameJoltTrophyAchieve(5738);
+                                        GJAPI.TrophyAchieve(5738);
                                 }
 
                                 // handle typed blocks
@@ -492,12 +493,14 @@ cBall.prototype.Move = function()
                     {
                         // prevent infinite ball
                         this.m_vDirection[iX] = -1.0*Signf(this.m_vPosition[iX]);
-                        vec2.normalize(this.m_vDirection, this.m_vDirection);
                     }
-                    
+
+                    // always normalize direction
+                    vec2.normalize(this.m_vDirection, this.m_vDirection);
+
                     // start bump-effect
                     g_pPaddle[i].m_fBump = 1.0;
-                    g_pSoundBump.Play(1.0);
+                    g_pSoundBump.Play(1.05);
                 }
             }
             else
@@ -529,7 +532,7 @@ cBall.prototype.Move = function()
 
                     // start bump-effect
                     g_pPaddle[i].m_fBump = 1.0;
-                    g_pSoundBump.Play(1.0);
+                    g_pSoundBump.Play(1.05);
 
                     // reset paddle-hit time
                     g_fGameJoltFly = 0.0;

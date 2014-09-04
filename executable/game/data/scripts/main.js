@@ -367,6 +367,9 @@ function Move()
 
     // update block time (own time because of block-explosion on fail)
     g_fBlockTime = g_fTime * Math.max(1.0-g_fFail*2.0, 0.0);
+    
+    // update session status
+    if(GJAPI.bActive) GJAPI.bSessionActive = (g_iStatus === C_STATUS_GAME) ? true : false;
 
     // update intro
     if(g_iStatus === C_STATUS_INTRO)
@@ -1035,7 +1038,7 @@ function ActivateFail()
     g_iStatus = C_STATUS_FAIL;
 
     // set final score
-    g_pMenuScore.innerHTML = "<font>Thank you for playing!<br /><br />Final Score:<br />" + IntToString(g_iScore.toFixed(0), 6) +"</font>";
+    g_pMenuScore.innerHTML = "<font>Thank you for playing!<br /><br />Final Score<br />" + IntToString(g_iScore.toFixed(0), 6) +"</font>";
 
     // send score to Game Jolt
     if(GJAPI.bActive) GJAPI.ScoreAdd(21033, g_iScore.toFixed(0), g_iScore.toFixed(0) + " Points (L" + ((g_iLevel >= C_LEVEL_NUM-1) ? "!" : (g_iLevel+1)) + ")", g_fTotalTime.toFixed(2));
