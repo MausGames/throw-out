@@ -1379,8 +1379,12 @@ cLevel.s_apInit[LVL] = function()
 
     // save configured ball speed
     cLevel.s_aiStatus[0] = g_pBall[0].m_fSpeed;
+    
+    // prevent ball displacement
+    cLevel.s_aiStatus[5] = C_BALL_DISPLACE;
+    C_BALL_DISPLACE = 0.0;
 
-    // decrese level time
+    // decrease level time
     cLevel.s_aiStatus[3] = C_LEVEL_TIME;
     C_LEVEL_TIME = 15.0;
 };
@@ -1444,6 +1448,9 @@ cLevel.s_apExit[LVL] = function()
 {
     // reset ball speed
     g_pBall[0].m_fSpeed = cLevel.s_aiStatus[0];
+    
+    // reset ball displacement
+    C_BALL_DISPLACE = cLevel.s_aiStatus[5];
 
     // reset level time
     C_LEVEL_TIME = cLevel.s_aiStatus[3];
