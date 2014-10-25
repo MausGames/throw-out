@@ -601,7 +601,7 @@ function Move()
     vec3.add(g_vCamPos, g_vCamPos, [g_vView[0]*g_vVector[0], g_vView[1]*g_vVector[1], 45.0]);
     vec3.add(g_vCamTar, g_vCamTar, [g_vView[0]*0.5,          g_vView[1]*0.5,          fCameraZ]);
     mat4.lookAt(g_mCamera, g_vCamPos, g_vCamTar, [0.0, 0.0, 1.0]);
-
+    
     // request next frame
     GL.flush(); // just in case, but not required
     g_iRequestID = requestAnimationFrame(Render, g_pCanvas);
@@ -622,7 +622,6 @@ function SetupVideo()
     // enable depth testing
     GL.enable(GL.DEPTH_TEST);
     GL.depthFunc(GL.LEQUAL);
-    GL.polygonOffset(1.1, 4.0);
     GL.clearDepth(1.0);
 
     // enable culling
@@ -662,6 +661,18 @@ function SetupAudio()
         this.src = C_MUSIC_FILE[g_iMusicCurrent];
         this.play();
     });
+    
+    // try to resume an unintentional pause (just check for everything which may cause it)
+    var pResume = function()
+    {
+        if(g_bMusicStatus && g_bMusic) g_pAudio.play();
+    };
+    g_pAudio.addEventListener("abort",   pResume);
+    g_pAudio.addEventListener("error",   pResume);
+    g_pAudio.addEventListener("pause",   pResume);
+    g_pAudio.addEventListener("stalled", pResume);
+    g_pAudio.addEventListener("suspend", pResume);
+    g_pAudio.addEventListener("waiting", pResume);
     
     // init sound class and sound files
     cSound.Init();
