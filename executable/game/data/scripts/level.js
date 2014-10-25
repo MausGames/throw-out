@@ -53,7 +53,7 @@ cLevel.s_avBlockPos = function()
     return avOutput;
 }();
 
-cLevel.s_aiStatus = new Float32Array(10);   // some status attributes for level-specific functions (resetet to 0 on level start)
+cLevel.s_aiStatus = new Float32Array(10);   // some status attributes for level-specific functions (reseted to 0 on level start)
 
 
 // ****************************************************************

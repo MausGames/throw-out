@@ -7,7 +7,7 @@ Based on the popular bat-and-ball gameplay, you have to kick colorful blocks off
 Throw Out is a **browser-based arcade game** with fast 3d graphics and a unique design made for experienced players and younger ones looking for a major challenge.
 
 > - 14.5 unique levels with fast and unforgiving gameplay
-> - playable in every modern browser, even on mobile devices
+> - playable in every modern browser, even on mobile devices and smart TVs
 > - simple but fluid 3d graphics without plugins, fullscreen mode included
 
 #
