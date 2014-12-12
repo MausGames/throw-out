@@ -1704,7 +1704,7 @@ cLevel.s_apInit[LVL] = function()
     for(var i = C_LEVEL_X*4; i < C_LEVEL_X*11; ++i)
         g_pBlock[i].m_vPosition[1] = -200.0;
 
-    // init spred direction
+    // init spread direction
     cLevel.s_aiStatus[5] = 1.0;
 
     // increase transition time
