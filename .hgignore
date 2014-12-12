@@ -1,7 +1,4 @@
 syntax: glob
 backup/
 material/screenshots/
-projects/netbeans/nbproject/private/private.properties
-projects/netbeans/nbproject/private/private.xml
-projects/netbeans/nbproject/private/retriever/catalog.xml
-projects/netbeans/nbproject/private/retriever/creativecommons.org/ns.xml
+projects/netbeans/nbproject/private/
