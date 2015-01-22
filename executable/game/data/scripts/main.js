@@ -52,9 +52,9 @@ var C_MSG_CHANCE = 3;
 
 // music files
 var C_MUSIC_FILE =
-["data/music/Catch_My_Fall.ogg",
- "data/music/Fifth_World.ogg",
- "data/music/Nocturnia.ogg"];
+["data/music/Catch_My_Fall",
+ "data/music/Fifth_World",
+ "data/music/Nocturnia"];
 
 
 // ****************************************************************
@@ -196,7 +196,7 @@ function Init()
     if(!GL)
     {
         GL = g_pCanvas.getContext("experimental-webgl", abProperty);
-        IsExp = true;
+        //IsExp = true; # disabled, it seems even IE11 has added all missing features
 
         if(!GL)
         {
@@ -651,14 +651,19 @@ function SetupVideo()
 // ****************************************************************
 function SetupAudio()
 {
-    // retrieve audio stream and load first music file
+    // retrieve audio stream
     g_pAudio = document.getElementById("stream");
-    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent];
+
+    // check for supported audio format
+    var sFormat = (g_pAudio.canPlayType && g_pAudio.canPlayType("audio/mpeg")) ? ".mp3" : ".ogg";
+
+    // load first music file
+    g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent] + sFormat;
     g_pAudio.addEventListener("ended", function()
     {
         // play next music file
         if(++g_iMusicCurrent >= C_MUSIC_FILE.length) g_iMusicCurrent = 0;
-        this.src = C_MUSIC_FILE[g_iMusicCurrent];
+        this.src = C_MUSIC_FILE[g_iMusicCurrent] + sFormat;
         this.play();
     });
     
