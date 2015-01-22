@@ -308,6 +308,9 @@ cBall.prototype.Move = function()
     // update life time
     this.m_fLifeTime += g_fTime;
 
+    // reset paddle status (always)
+    this.m_iHitPaddle = 0;
+
     // get current plane distance (single value)
     var fMaxPos = Clamp((60.0 - Math.max(Math.abs(this.m_vPosition[0]), Math.abs(this.m_vPosition[1])))*0.05, 0.0, 1.0);
 
@@ -468,7 +471,6 @@ cBall.prototype.Move = function()
         cBall.s_vPreTrueSize[3] = this.m_vPosition[1] + C_BALL_SIZE;
 
         // test collision with paddles
-        this.m_iHitPaddle = 0;
         for(var i = 0; i < 4; ++i)
         {
             // (direction is set on paddle creation, 0/bottom, 1/up, 2/left, 3/right)
