@@ -1438,7 +1438,7 @@ cLevel.s_apFunction[LVL] = function()
                 var pBlock = g_pBlock[iPos + iX+iY*C_LEVEL_X];
 
                 // set new color value
-                if(abOutput[i]) vec3.set(pBlock.m_vColor, pvColor[0]*0.15, pvColor[1]*0.15, pvColor[2]*0.15);
+                if(abOutput[i]) vec3.set(pBlock.m_vColor, pvColor[0]*0.2, pvColor[1]*0.2, pvColor[2]*0.2);
                            else vec3.copy(pBlock.m_vColor, pvColor);
             }
         }
