@@ -364,7 +364,7 @@ cPaddle.prototype.Render = function()
     GL.uniformMatrix4fv(cPaddle.s_pShader.m_iUniformModelViewProj, false, g_mMatrix);
 
     // check and update current values (check to reduce video bandwidth)
-    if(!CompareArray(cPaddle.s_vSaveColor, this.m_vColor, 3)) {vec3.copy(cPaddle.s_vSaveColor, this.m_vColor); GL.uniform3f(cPaddle.s_pShader.m_iUniformColor, this.m_vColor[0], this.m_vColor[1], this.m_vColor[2]);}
+    if(!CompareArray(cPaddle.s_vSaveColor, this.m_vColor, 3)) {vec3.copy(cPaddle.s_vSaveColor, this.m_vColor); GL.uniform3fv(cPaddle.s_pShader.m_iUniformColor, this.m_vColor);}
     if(cPaddle.s_fSaveLength !== this.m_vSize[0]) 
     {
         cPaddle.s_fSaveLength = this.m_vSize[0];

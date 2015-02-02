@@ -319,7 +319,7 @@ cBlock.prototype.Render = function()
     
     // check and update current values (check to reduce video bandwidth)
     if(!CompareArray(cBlock.s_mSaveNormal, this.m_mNormal, 9)) {mat3.copy(cBlock.s_mSaveNormal, this.m_mNormal); GL.uniformMatrix3fv(cBlock.s_pShader.m_iUniformNormal, false, this.m_mNormal);}
-    if(!CompareArray(cBlock.s_vSaveColor,  this.m_vColor,  4)) {vec4.copy(cBlock.s_vSaveColor,  this.m_vColor);  GL.uniform4f(cBlock.s_pShader.m_iUniformColor,                this.m_vColor[0], this.m_vColor[1], this.m_vColor[2], this.m_vColor[3]);}
+    if(!CompareArray(cBlock.s_vSaveColor,  this.m_vColor,  4)) {vec4.copy(cBlock.s_vSaveColor,  this.m_vColor);  GL.uniform4fv(cBlock.s_pShader.m_iUniformColor,               this.m_vColor);}
     if(cBlock.s_iSaveType !== this.m_iType)                    {cBlock.s_iSaveType = this.m_iType;               GL.uniform1i(cBlock.s_iUniformType,                           this.m_iType);}
     
     // render the model (# performance hotspot)
