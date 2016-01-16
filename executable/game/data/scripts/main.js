@@ -127,6 +127,7 @@ var g_mCamera     = mat4.create();              // global camera matrix
 var g_vView       = vec2.clone(C_BALL_START);   // current position and view of the camera
 var g_fCamAngle   = 0.0;                        // azimuth of the camera
 var g_fCamAcc     = 1.0;                        // camera move acceleration (to enable smoother targeting when creating new balls)
+var g_bCamActive  = true;                       // camera movement status (toggle with C)
 
 var g_vMousePos   = vec2.create();              // current position of the cursor [-V/2, V/2]
 var g_fMouseRect  = vec2.create();              // transformed canvas-rect values required for mouse position calculations
@@ -174,7 +175,7 @@ var g_vAveragePos  = vec2.create();             // pre-allocated average positio
 var g_vCamPos      = vec3.create();             // pre-allocated camera position
 var g_vCamTar      = vec3.create();             // pre-allocated camera target
 
-var g_pBackground = null;
+var g_pBackground = null;                       // background object
 var g_pPlane      = null;                       // plane object
 var g_pPaddle     = null;                       // paddle/wall object array
 var g_pBall       = null;                       // ball object array
@@ -564,6 +565,19 @@ function Move()
         }
     }
     if(g_iStatus === C_STATUS_FAIL) vec2.set(g_vAveragePos, 0.0, 0.0);
+    
+    // disable camera movement
+    if(!g_bCamActive)
+    {
+        vec2.set(g_vAveragePos, 0.0, -25.0);
+        
+        if(g_fCamAngle)
+        {
+            mat4.identity(g_mMatrix);
+            mat4.rotateZ(g_mMatrix, g_mMatrix, g_fCamAngle);
+            vec2.transformMat4(g_vAveragePos, g_vAveragePos, g_mMatrix);
+        }
+    }
 
     // accelerate camera
     g_fCamAcc = Math.min(g_fCamAcc + g_fTime*1.0, 1.0);
@@ -724,6 +738,9 @@ function SetupInput()
             // check for M key
             if(iKey === 77) GJAPI.TrophyAchieve(5739);
         }
+        
+        // check for C key, toggle camera movement
+        if(iKey === 67) g_bCamActive = !g_bCamActive;
 
         // check for enter, escape and whitespace
         if(iKey === 13 || iKey === 27 || iKey === 32)
