@@ -669,7 +669,7 @@ function SetupAudio()
     g_pAudio = document.getElementById("stream");
 
     // check for supported audio format
-    var sFormat = (g_pAudio.canPlayType && g_pAudio.canPlayType("audio/mpeg")) ? ".mp3" : ".ogg";
+    var sFormat = (g_pAudio.canPlayType && (g_pAudio.canPlayType("audio/ogg") != "")) ? ".ogg" : ".mp3";
 
     // load first music file
     g_pAudio.src = C_MUSIC_FILE[g_iMusicCurrent] + sFormat;
