@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////
 //*-----------------------------------------------*//
-//| Part of Throw Out (http://www.maus-games.at)  |//
+//| Part of Throw Out (https://www.maus-games.at) |//
 //*-----------------------------------------------*//
 //| Released under the zlib License               |//
 //| More information available in the readme file |//

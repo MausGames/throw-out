@@ -11,8 +11,8 @@ Throw Out is a **browser-based Breakout clone** with fast 3d graphics and a uniq
 #
 
 **Browser Version:**  
-<http://gamejolt.com/games/arcade/throw-out/20444/>
+<https://gamejolt.com/games/arcade/throw-out/20444/>
 
 **Music:**  
-by Psychadelik Pedestrian (<http://www.toucanmusic.co.uk/albums/toulp5.html>)  
-Licensed under CC BY-NC (<http://creativecommons.org/licenses/by-nc/3.0/>)
+by Psychadelik Pedestrian (<https://www.toucanmusic.com/albums/toulp5>)  
+Licensed under CC BY-NC (<https://creativecommons.org/licenses/by-nc/3.0/>)

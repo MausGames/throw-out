@@ -1,5 +1,5 @@
 var GJAPI={};
-GJAPI.iGameID    = 20444 ;      // # change this
+GJAPI.iGameID    = 20444;      // # change this
 GJAPI.sGameKey   = "-";     // # change this too
 GJAPI.bAutoLogin = true;   // automatically log in users on Game Jolt
 

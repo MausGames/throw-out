@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////
 //*-----------------------------------------------*//
-//| Part of Throw Out (http://www.maus-games.at)  |//
+//| Part of Throw Out (https://www.maus-games.at) |//
 //*-----------------------------------------------*//
 //| Released under the zlib License               |//
 //| More information available in the readme file |//
@@ -2053,3 +2053,5 @@ cLevel.s_apExit[LVL] = function()
 // Boss: indestructible life-bar on top (green -> red)
 // Creation of new blocks during the level
 // Rain-like animation + new blocks spawn from below around the "rain-drop"
+// Block jumps from location to location when hit
+// Block explodes into new blocks when hit

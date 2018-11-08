@@ -1,6 +1,6 @@
 /////////////////////////////////////////////////////
 //*-----------------------------------------------*//
-//| Part of Throw Out (http://www.maus-games.at)  |//
+//| Part of Throw Out (https://www.maus-games.at) |//
 //*-----------------------------------------------*//
 //| Released under the zlib License               |//
 //| More information available in the readme file |//
@@ -206,7 +206,7 @@ function Init()
             document.body.innerHTML = "<p style='font: bold 16px sans-serif; position: absolute; left: 50%; top: 49%; width: 400px; height: 140px; margin: -70px 0 0 -200px; text-align: center;'>" +
                                       "<img src='data/images/webgl_logo.png' alt='WebGL' /><br/>" +
                                       "Your browser sucks and doesn't support WebGL.<br/>" +
-                                      "Visit <a href='http://get.webgl.org/' style='color: blue;'>http://get.webgl.org/</a> for more information.</p>";
+                                      "Visit <a href='https://get.webgl.org/' style='color: blue;'>https://get.webgl.org/</a> for more information.</p>";
             return;
         }
     }
@@ -897,7 +897,7 @@ function Resize()
     // resize canvas
     g_pCanvas.width  = window.innerWidth  - (asQueryParam["launcher"] ? 2 : 0);
     g_pCanvas.height = window.innerHeight - (asQueryParam["launcher"] ? 2 : 0);
-    if(asQueryParam["launcher"] ) g_pCanvas.style.marginTop = "1px";
+    if(asQueryParam["launcher"]) g_pCanvas.style.marginTop = "1px";
 
     // resize font
     document.body.style.fontSize = (g_pCanvas.height/800.0)*100.0 + "%";

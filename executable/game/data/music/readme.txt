@@ -1,2 +1,2 @@
-Music by Psychadelik Pedestrian (http://www.toucanmusic.co.uk/albums/toulp5.html)
-Licensed under CC BY-NC (http://creativecommons.org/licenses/by-nc/3.0/)
+Music by Psychadelik Pedestrian (https://www.toucanmusic.com/albums/toulp5)
+Licensed under CC BY-NC (https://creativecommons.org/licenses/by-nc/3.0/)
