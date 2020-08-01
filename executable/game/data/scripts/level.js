@@ -749,7 +749,7 @@ cLevel.s_apFunction[LVL] = function()
         if(pBlock.IsHit())
         {
             var bHit = false;
-            for(var k = 0; k < 2; ++k)
+            for(var k = 0; k < 3; ++k)
             {
                 // check which ball hit the block
                 if(g_pBall[k].m_iHitBlock !== i+1) continue;
