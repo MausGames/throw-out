@@ -93,7 +93,7 @@ cShadow.Init = function()
 cShadow.Exit = function()
 {
     if(IsExp) return;
-    
+
     // clear shader-program
     cShadow.s_pShaderObject.Clear();
     cShadow.s_pShaderLayer.Clear();

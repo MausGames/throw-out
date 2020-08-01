@@ -15,7 +15,7 @@ cPlane.s_afVertexData =
  -35.0,  35.0, 0.0, 0.0, 0.0, 0.0,
   35.0, -35.0, 0.0, 0.0, 0.0, 0.0,
   35.0,  35.0, 0.0, 0.0, 0.0, 0.0];
-                      
+
 cPlane.s_aiIndexData =
 [0, 2, 1, 1, 2, 3];
 
@@ -84,7 +84,7 @@ cPlane.Init = function(bHigh)
     // define model and shader-program
     if(cPlane.s_pModel  === null) cPlane.s_pModel  = new cModel(cPlane.s_afVertexData, cPlane.s_aiIndexData);
     if(cPlane.s_pShader === null) cPlane.s_pShader = new cShader(cPlane.s_sVertexShader, cPlane.s_sFragmentShader);
-    
+
     // define texture
     if(cPlane.s_pTexture !== null) cPlane.s_pTexture.Clear();
     if(bHigh) {g_pTexture.width = 256; g_pTexture.height = 256;}
@@ -136,7 +136,7 @@ cPlane.UpdateTextureValues = function(fNewValueTop, fNewValueMiddle, fNewValueBo
         TEX.fillStyle = "#DDDDDD";
         if(fNewValueTop    >= 0) TEX.fillText(IntToString(Math.floor(fNewValueTop/60), 2) + ":" + IntToString(fNewValueTop%60, 2), cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*1.0);
         if(fNewValueBottom >= 0) TEX.fillText("x " + fNewValueBottom.toFixed(1),                                                   cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*3.0);
- 
+
         // update texture
         cPlane.s_pTexture.Enable();
         cPlane.s_pTexture.Update(g_pTexture);

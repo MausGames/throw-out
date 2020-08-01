@@ -1,9 +1,9 @@
 var GJAPI={};
-GJAPI.iGameID    = 20444;      // # change this
+GJAPI.iGameID    = 20444;   // # change this
 GJAPI.sGameKey   = "-";     // # change this too
-GJAPI.bAutoLogin = true;   // automatically log in users on Game Jolt
+GJAPI.bAutoLogin = true;    // automatically log in users on Game Jolt
 
-0!==GJAPI.iGameID&&""!==GJAPI.sGameKey||alert("Game ID or Game Key missing!");GJAPI.sAPI="http://gamejolt.com/api/game/v1";GJAPI.sLogName="[Game Jolt API]";GJAPI.iLogStack=20;GJAPI.asQueryParam=function(){for(var a={},f=window.location.search.substring(1).split("&"),c=0;c<f.length;++c){var b=f[c].split("=");"undefined"===typeof a[b[0]]?a[b[0]]=b[1]:"string"===typeof a[b[0]]?a[b[0]]=[a[b[0]],b[1]]:a[b[0]].push(b[1])}return a}();
+0!==GJAPI.iGameID&&""!==GJAPI.sGameKey||alert("Game ID or Game Key missing!");GJAPI.sAPI="https://gamejolt.com/api/game/v1";GJAPI.sLogName="[Game Jolt API]";GJAPI.iLogStack=20;GJAPI.asQueryParam=function(){for(var a={},f=window.location.search.substring(1).split("&"),c=0;c<f.length;++c){var b=f[c].split("=");"undefined"===typeof a[b[0]]?a[b[0]]=b[1]:"string"===typeof a[b[0]]?a[b[0]]=[a[b[0]],b[1]]:a[b[0]].push(b[1])}return a}();
 GJAPI.bOnGJ=window.location.hostname.match(/gamejolt/)?!0:!1;GJAPI.LogTrace=function(a){GJAPI.iLogStack&&(--GJAPI.iLogStack||(a="(\u256f\u00b0\u25a1\u00b0\uff09\u256f\ufe35 \u253b\u2501\u253b"),console.warn(GJAPI.sLogName+" "+a),console.trace())};GJAPI.SEND_USER=!0;GJAPI.SEND_GENERAL=!1;GJAPI.SendRequest=function(a,f,c){GJAPI.SendRequestEx(a,f,"json","",c)};
 GJAPI.SendRequestEx=function(a,f,c,b,d){a=GJAPI.sAPI+encodeURI(a)+(-1===a.indexOf("/?")?"?":"&")+"game_id="+GJAPI.iGameID+"&format="+c;GJAPI.bActive&&f===GJAPI.SEND_USER&&(a+="&username="+GJAPI.sUserName+"&user_token="+GJAPI.sUserToken);a+="&signature="+hex_md5(a+GJAPI.sGameKey);__CreateAjax(a,b,function(b){console.info(GJAPI.sLogName+" <"+a+"> "+b);if(""!==b&&"function"===typeof d)switch(c){case "json":d(eval("("+b+")").response);break;case "dump":var f=b.indexOf("\n"),h=b.substr(0,f-1);b=b.substr(f+
 1);d({success:"SUCCESS"===h,data:b});break;default:d(b)}})};GJAPI.bActive=GJAPI.bAutoLogin&&GJAPI.asQueryParam.gjapi_username&&GJAPI.asQueryParam.gjapi_token?!0:!1;GJAPI.sUserName=GJAPI.bActive?GJAPI.asQueryParam.gjapi_username:"";GJAPI.sUserToken=GJAPI.bActive?GJAPI.asQueryParam.gjapi_token:"";console.info(GJAPI.asQueryParam);console.info(GJAPI.sLogName+(GJAPI.bOnGJ?" E":" Not e")+"mbedded on Game Jolt <"+window.location.origin+window.location.pathname+">");

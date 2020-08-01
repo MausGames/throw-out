@@ -98,7 +98,7 @@ function NextLevel(bLoseChance)
 
     // call level exit-function
     if(cLevel.s_apExit[g_iLevel]) cLevel.s_apExit[g_iLevel]();
-    
+
     // reset total level time
     g_fLevelTime = C_TRANSITION_START - C_TRANSITION_END;
 
@@ -158,7 +158,7 @@ function LoadLevel(iLevelNum)
         if(!g_pBlock[iCur] || g_pBlock[iCur].m_bFlying)
         {
             var iVal = i % C_LEVEL_BX;
-            
+
             // create block
             g_pBlock[iCur] = new cBlock();
 
@@ -1379,7 +1379,7 @@ cLevel.s_apInit[LVL] = function()
 
     // save configured ball speed
     cLevel.s_aiStatus[0] = g_pBall[0].m_fSpeed;
-    
+
     // prevent ball displacement
     cLevel.s_aiStatus[5] = C_BALL_DISPLACE;
     C_BALL_DISPLACE = 0.0;
@@ -1448,7 +1448,7 @@ cLevel.s_apExit[LVL] = function()
 {
     // reset ball speed
     g_pBall[0].m_fSpeed = cLevel.s_aiStatus[0];
-    
+
     // reset ball displacement
     C_BALL_DISPLACE = cLevel.s_aiStatus[5];
 
@@ -2028,7 +2028,7 @@ cLevel.s_apFunction[LVL] = function()
     if(g_fLevelTime >= 0.0 && !cLevel.s_aiStatus[0])
     {
         cLevel.s_aiStatus[0] = 1;
-        
+
         for(var i = 0; i < C_BALLS-1; ++i)
         {
             vec2.random(g_vVector);
@@ -2055,3 +2055,4 @@ cLevel.s_apExit[LVL] = function()
 // Rain-like animation + new blocks spawn from below around the "rain-drop"
 // Block jumps from location to location when hit
 // Block explodes into new blocks when hit
+// Reflection level, play on bottom half, destroy blocks on upper half

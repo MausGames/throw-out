@@ -246,7 +246,7 @@ function Init()
     g_pPaddle[3] = new cPaddle([-1.0,  0.0]);
     for(var i = 0; i < 4; ++i)
         g_pPaddle[i].m_bWall = cLevel.s_aabPaddle[0][i] ? false : true;
-    
+
     // create balls
     g_pBall = new Array(C_BALLS);
     for(var i = 0; i < C_BALLS; ++i)
@@ -270,7 +270,7 @@ window.addEventListener("beforeunload", function()   // Exit()
 
     // cancel last animation frame
     window.cancelAnimationFrame(g_iRequestID);
-    
+
     // exit object interfaces
     cShadow.Exit();
     cBackground.Exit();
@@ -368,7 +368,7 @@ function Move()
 
     // update block time (own time because of block-explosion on fail)
     g_fBlockTime = g_fTime * Math.max(1.0-g_fFail*2.0, 0.0);
-    
+
     // update session status
     if(GJAPI.bActive) GJAPI.bSessionActive = (g_iStatus === C_STATUS_GAME) ? true : false;
 
@@ -471,7 +471,7 @@ function Move()
             // finish level
             NextLevel(false);
         }
-        
+
         // apply level-specific function
         if(cLevel.s_apFunction[g_iLevel] && g_fTransition >= C_TRANSITION_LEVEL)
             cLevel.s_apFunction[g_iLevel]();
@@ -531,7 +531,7 @@ function Move()
                     // check and add trophy
                     if(0 < iBlocks && iBlocks <= 5) GJAPI.TrophyAchieve(5778);
                 }
-                
+
                 // reduce chances, skip level or activate fail screen
                 NextLevel(true);
             }
@@ -565,12 +565,12 @@ function Move()
         }
     }
     if(g_iStatus === C_STATUS_FAIL) vec2.set(g_vAveragePos, 0.0, 0.0);
-    
+
     // disable camera movement
     if(!g_bCamActive)
     {
         vec2.set(g_vAveragePos, 0.0, -25.0);
-        
+
         if(g_fCamAngle)
         {
             mat4.identity(g_mMatrix);
@@ -600,7 +600,7 @@ function Move()
         // create rotation matrix
         mat4.identity(g_mMatrix);
         mat4.rotateZ(g_mMatrix, g_mMatrix, g_fCamAngle);
-        
+
         // rotate camera position around the center
         vec2.transformMat4(g_vCamPos, g_vCamPos, g_mMatrix);
         vec2.transformMat4(g_vCamTar, g_vCamTar, g_mMatrix);
@@ -615,7 +615,7 @@ function Move()
     vec3.add(g_vCamPos, g_vCamPos, [g_vView[0]*g_vVector[0], g_vView[1]*g_vVector[1], 45.0]);
     vec3.add(g_vCamTar, g_vCamTar, [g_vView[0]*0.5,          g_vView[1]*0.5,          fCameraZ]);
     mat4.lookAt(g_mCamera, g_vCamPos, g_vCamTar, [0.0, 0.0, 1.0]);
-    
+
     // request next frame
     GL.flush(); // just in case, but not required
     g_iRequestID = requestAnimationFrame(Render, g_pCanvas);
@@ -660,8 +660,8 @@ function SetupVideo()
     // init model class
     cModel.Init();
 }
-    
-    
+
+
 // ****************************************************************
 function SetupAudio()
 {
@@ -680,7 +680,7 @@ function SetupAudio()
         this.src = C_MUSIC_FILE[g_iMusicCurrent] + sFormat;
         this.play();
     });
-    
+
     // try to resume an unintentional pause (just check for everything which may cause it)
     var pResume = function()
     {
@@ -692,7 +692,7 @@ function SetupAudio()
     g_pAudio.addEventListener("stalled", pResume);
     g_pAudio.addEventListener("suspend", pResume);
     g_pAudio.addEventListener("waiting", pResume);
-    
+
     // init sound class and sound files
     cSound.Init();
     g_pSoundBump = new cSound("data/sounds/bump.wav");
@@ -738,7 +738,7 @@ function SetupInput()
             // check for M key
             if(iKey === 77) GJAPI.TrophyAchieve(5739);
         }
-        
+
         // check for C key, toggle camera movement
         if(iKey === 67) g_bCamActive = !g_bCamActive;
 
@@ -814,7 +814,7 @@ function SetupMenu()
         else
         {
             var pDoc = document.documentElement;
-            
+
             // enable fullscreen mode
                  if(pDoc.requestFullscreen)       pDoc.requestFullscreen();
             else if(pDoc.mozRequestFullScreen)    pDoc.mozRequestFullScreen();
@@ -912,7 +912,7 @@ function Resize()
     g_pMenuOption2.style.width = sWidth;
     g_pMenuLevel.style.width   = sWidth;
     g_pMenuScore.style.width   = sWidth;
-    
+
     var sMargin = -g_pCanvas.width*0.5 + "px";
     g_pMenuHeader.style.marginLeft  = sMargin;
     g_pMenuOption1.style.marginLeft = sMargin;
@@ -1090,7 +1090,7 @@ function ActivateFail()
     {
         vec3.sub(g_vVector, g_pBlock[i].m_vPosition, [0.0, 0.0, -10.0]);
         var fStrength = Math.max(40.0 - vec3.length(g_vVector), 0.0)*0.05;
-        
+
         vec3.normalize(g_vVector, g_vVector);
         g_vVector[0] *= fStrength;
         g_vVector[1] *= fStrength;
@@ -1098,7 +1098,7 @@ function ActivateFail()
 
         g_pBlock[i].Throw(g_vVector, g_vVector[2]);
     }
-    
+
     // set music volume
     g_pAudio.volume = 0.5;
 }
