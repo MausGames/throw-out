@@ -865,6 +865,8 @@ function SetupMenu()
 // ****************************************************************
 function SetupRefresh()
 {
+    if(window.requestAnimationFrame && window.cancelAnimationFrame) return;
+
     var iLastTime = 0;
     var asVendor  = ['moz', 'webkit', 'ms', 'o'];
 
@@ -876,7 +878,7 @@ function SetupRefresh()
     }
 
     // implement alternatives on missing animation functions
-    if(!window.requestAnimationFrame)
+    if(!window.requestAnimationFrame || !window.cancelAnimationFrame)
     {
         window.requestAnimationFrame = function(pCallback)
         {
@@ -943,9 +945,11 @@ function SetCursor(bStatus)
 // ****************************************************************
 function SetOpacity(pElement, fOpacity)
 {
+    var sDisplay = (fOpacity <= 0.01) ? "none" : "block";
+
     // set opacity of element and remove it completely when low
-    pElement.style.opacity = fOpacity;
-    pElement.style.display = (fOpacity <= 0.01) ? "none" : "block";
+    if(pElement.style.opacity !== fOpacity) pElement.style.opacity = fOpacity;
+    if(pElement.style.display !== sDisplay) pElement.style.display = sDisplay;
 }
 
 

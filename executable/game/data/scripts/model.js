@@ -33,10 +33,12 @@ cModel.PackSnorm32to8 = function(fValue)
 // ****************************************************************
 function cModel(afVertexData, aiIndexData)
 {
+    var bAllowByteIndices = false;   // # desktop is much faster with SHORT
+
     // save size values
     this.m_iNumVertices = afVertexData.length / 6;
     this.m_iNumIndices  = aiIndexData.length;
-    this.m_iIndexFormat = (this.m_iNumVertices < 256) ? GL.UNSIGNED_BYTE : GL.UNSIGNED_SHORT; // # though desktop is faster with SHORT
+    this.m_iIndexFormat = (bAllowByteIndices && (this.m_iNumVertices < 256)) ? GL.UNSIGNED_BYTE : GL.UNSIGNED_SHORT;
 
     // compress vertex data
     var pData      = new ArrayBuffer(this.m_iNumVertices * 4 * 4);
@@ -52,7 +54,7 @@ function cModel(afVertexData, aiIndexData)
         pViewByte[i*16 + 12] = cModel.PackSnorm32to8(afVertexData[i*6 + 3]);
         pViewByte[i*16 + 13] = cModel.PackSnorm32to8(afVertexData[i*6 + 4]);
         pViewByte[i*16 + 14] = cModel.PackSnorm32to8(afVertexData[i*6 + 5]);
-        pViewByte[i*16 + 15] = 0; // # 4-byte alignment for max performance
+        pViewByte[i*16 + 15] = 0;   // # 4-byte alignment for max performance
     }
 
     // create vertex buffer
@@ -63,7 +65,7 @@ function cModel(afVertexData, aiIndexData)
     // create index buffer
     this.m_iIndexBuffer = GL.createBuffer();
     GL.bindBuffer(GL.ELEMENT_ARRAY_BUFFER, this.m_iIndexBuffer);
-    GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, (this.m_iNumVertices < 256) ? new Uint8Array(aiIndexData) : new Uint16Array(aiIndexData), GL.STATIC_DRAW);
+    GL.bufferData(GL.ELEMENT_ARRAY_BUFFER, (bAllowByteIndices && (this.m_iNumVertices < 256)) ? new Uint8Array(aiIndexData) : new Uint16Array(aiIndexData), GL.STATIC_DRAW);
 
     // reset current vertex buffer
     cModel.s_iCurVertexBuffer = 0;
@@ -91,7 +93,7 @@ cModel.prototype.Render = function()
 
         // set attributes
         GL.vertexAttribPointer(0, 3, GL.FLOAT, false, 4*4, 0);
-        GL.vertexAttribPointer(1, 4, GL.BYTE,  false, 4*4, 3*4);
+        GL.vertexAttribPointer(1, 4, GL.BYTE,  true,  4*4, 3*4);
     }
 
     // draw the model
