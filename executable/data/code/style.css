@@ -1,0 +1,85 @@
+/* default font-face */
+@font-face
+{
+    font-family: 'square';
+    src: url('../fonts/square.eot');
+    src: url('../fonts/square.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/square.woff') format('woff'),
+         url('../fonts/square.ttf') format('truetype'),
+         url('../fonts/square.svg#squarefontregular') format('svg');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* global style */
+*
+{
+    margin: 0;
+}
+
+/* link style */
+a
+{
+    color: #FFFFFF;
+}
+a:hover
+{
+    color: #C1DA0B;
+}
+
+/* text style */
+p
+{
+    color: #FFFFFF;
+    cursor: default;
+    display: inline;
+    text-shadow:  1px  1px 6px #000000,
+                  1px -1px 6px #000000,
+                 -1px  1px 6px #000000,
+                 -1px -1px 6px #000000;
+}
+
+/* header override */
+.header
+{
+    text-shadow:  1px  1px 10px #000000,
+                  1px -1px 10px #000000,
+                 -1px  1px 10px #000000,
+                 -1px -1px 10px #000000;
+}
+
+/* button override */
+.button
+{
+    text-decoration: underline;
+    cursor: pointer;
+}
+.button:hover
+{
+    color: #C1DA0B;
+}
+
+/* centered division */
+.middle
+{
+    width: 800px;
+    height: auto;
+    left: 50%;
+    margin: 0 0 0 -400px;
+    text-align: center;
+}
+
+/* centered and side division */
+.middle, .side
+{
+    font-family: square, serif;
+    position: absolute;
+    opacity: 0.0;
+    pointer-events: none;
+
+    -webkit-touch-callout: none;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+}
