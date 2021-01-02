@@ -1,3 +1,26 @@
+-------------------------------------------------------------------
+Resources
+
+Music
+- Psychadelik Pedestrian : Catch My Fall (CC BY-NC)
+- Psychadelik Pedestrian : Fifth World (CC BY-NC)
+- Psychadelik Pedestrian : Nocturnia (CC BY-NC)
+
+Sounds
+- #####
+
+Fonts
+- #####
+- Google : Noto Sans (OFL)
+
+
+-------------------------------------------------------------------
+Libraries
+
+- glMatrix (MIT)
+
+
+-------------------------------------------------------------------
 Copyright (c) 2014 Martin Mauersics (https://www.maus-games.at)
 
 This software is provided 'as-is', without any express or implied
