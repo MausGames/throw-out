@@ -7,10 +7,10 @@ Music
 - Psychadelik Pedestrian : Nocturnia (CC BY-NC)
 
 Sounds
-- #####
+- altemark : bd01 (CC BY)
 
 Fonts
-- #####
+- Agustín Bou : SquareFont (freeware)
 - Google : Noto Sans (OFL)
 
 
