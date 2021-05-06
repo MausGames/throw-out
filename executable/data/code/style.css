@@ -4,6 +4,7 @@
     font-family: 'square';
     src: url('../fonts/square.eot');
     src: url('../fonts/square.eot?#iefix') format('embedded-opentype'),
+         url('../fonts/square.woff2') format('woff2'),
          url('../fonts/square.woff') format('woff'),
          url('../fonts/square.ttf') format('truetype'),
          url('../fonts/square.svg#squarefontregular') format('svg');
