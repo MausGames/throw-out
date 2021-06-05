@@ -1,5 +1,9 @@
 # Throw Out
 
+[![software license: zlib](material/readme/badge_license_software.svg)](LICENSE.txt)
+[![content license: CC BY](material/readme/badge_license_content.svg)](https://creativecommons.org/licenses/by/4.0/)
+[![credits.txt](material/readme/badge_credits.svg)](executable/data/credits.txt)
+
 Based on the popular bat-and-ball gameplay, you have to kick colorful blocks off the platform, keep your balls together and get surprised by interesting and challenging levels.
 
 Throw Out is a **browser-based Breakout clone** with fast 3d graphics and a unique design made for experienced and curious players.
@@ -19,9 +23,9 @@ Licensed under CC BY-NC (<https://creativecommons.org/licenses/by-nc/3.0/>)
 
 #
 
-[![screenshot](material/screenshots/to_screen_new_001t.jpg?raw=true)](material/screenshots/to_screen_new_001.jpg?raw=true)
-[![screenshot](material/screenshots/to_screen_new_002t.jpg?raw=true)](material/screenshots/to_screen_new_002.jpg?raw=true)
-[![screenshot](material/screenshots/to_screen_new_003t.jpg?raw=true)](material/screenshots/to_screen_new_003.jpg?raw=true)
-[![screenshot](material/screenshots/to_screen_new_004t.jpg?raw=true)](material/screenshots/to_screen_new_004.jpg?raw=true)
-[![screenshot](material/screenshots/to_screen_new_005t.jpg?raw=true)](material/screenshots/to_screen_new_005.jpg?raw=true)
-[![screenshot](material/screenshots/to_screen_new_008t.jpg?raw=true)](material/screenshots/to_screen_new_008.jpg?raw=true)
+[![screenshot](material/screenshots/to_screen_new_001t.jpg)](material/screenshots/to_screen_new_001.jpg?raw=true)
+[![screenshot](material/screenshots/to_screen_new_002t.jpg)](material/screenshots/to_screen_new_002.jpg?raw=true)
+[![screenshot](material/screenshots/to_screen_new_003t.jpg)](material/screenshots/to_screen_new_003.jpg?raw=true)
+[![screenshot](material/screenshots/to_screen_new_004t.jpg)](material/screenshots/to_screen_new_004.jpg?raw=true)
+[![screenshot](material/screenshots/to_screen_new_005t.jpg)](material/screenshots/to_screen_new_005.jpg?raw=true)
+[![screenshot](material/screenshots/to_screen_new_008t.jpg)](material/screenshots/to_screen_new_008.jpg?raw=true)
