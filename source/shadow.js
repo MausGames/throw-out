@@ -140,7 +140,7 @@ cShadow.Apply = function()
     GL.colorMask(true, true, true, true);
     GL.depthMask(true);
 
-    // set stencil operations to draw shadow where the new value is different from his original value (128)
+    // set stencil operations to draw shadow where the new value is different from its original value (128)
     GL.stencilOp(GL.KEEP, GL.KEEP, GL.KEEP);
     GL.stencilFunc(GL.NOTEQUAL, 128, 255);
 

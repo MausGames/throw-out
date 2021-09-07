@@ -777,9 +777,9 @@ RES.cPlane.s_sFragmentShader =
 "precision mediump float;"                                                    +
 ""                                                                            +
 "uniform sampler2D u_s2Texture;"                                              +
-"varying vec3 v_v3Relative;"                                                  +
-"varying vec2 v_v2Border;"                                                    +
-"varying vec2 v_v2TexCoord;"                                                  +
+"varying vec3      v_v3Relative;"                                             +
+"varying vec2      v_v2Border;"                                               +
+"varying vec2      v_v2TexCoord;"                                             +
 ""                                                                            +
 "void main()"                                                                 +
 "{"                                                                           +
