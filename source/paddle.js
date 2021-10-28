@@ -74,8 +74,8 @@ cPaddle.prototype.Render = function()
     cPaddle.s_pShader.SendUniformMat4 ("u_m4ModelView",     mat4.mul(g_mMatrix, WIND.g_mCamera,     this.m_mTransform), false);
     cPaddle.s_pShader.SendUniformMat4 ("u_m4ModelViewProj", mat4.mul(g_mMatrix, WIND.g_mProjection, g_mMatrix),         false);
     cPaddle.s_pShader.SendUniformVec3 ("u_v3Color",         this.m_vColor);
-    cPaddle.s_pShader.SendUniformFloat("u_fLength",              3.6*fLength);
-    cPaddle.s_pShader.SendUniformFloat("u_fLengthDiv",      1.0/(1.0+fLength));
+    cPaddle.s_pShader.SendUniformFloat("u_v1Length",             3.6*fLength);
+    cPaddle.s_pShader.SendUniformFloat("u_v1LengthDiv",     1.0/(1.0+fLength));
 
     // draw the model
     cPaddle.s_pModel.Draw();

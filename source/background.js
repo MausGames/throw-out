@@ -44,7 +44,7 @@ cBackground.prototype.Render = function()
     cBackground.s_pShader.Enable();
 
     // update all object uniforms
-    cBackground.s_pShader.SendUniformFloat("u_fAlpha", this.m_fAlpha);
+    cBackground.s_pShader.SendUniformFloat("u_v1Alpha", this.m_fAlpha);
 
     // clear framebuffer and set alpha blending
     if(this.m_fAlpha >= 1.0)

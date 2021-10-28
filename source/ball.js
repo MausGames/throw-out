@@ -76,7 +76,7 @@ cBall.prototype.Render = function()
     // update all object uniforms
     cBall.s_pShader.SendUniformMat4 ("u_m4ModelView",     mat4.mul(g_mMatrix, WIND.g_mCamera,     this.m_mTransform), false);
     cBall.s_pShader.SendUniformMat4 ("u_m4ModelViewProj", mat4.mul(g_mMatrix, WIND.g_mProjection, g_mMatrix),         false);
-    cBall.s_pShader.SendUniformFloat("u_fAlpha",          this.m_fAlpha);
+    cBall.s_pShader.SendUniformFloat("u_v1Alpha",         this.m_fAlpha);
 
     // draw the model
     cBall.s_pModel.Draw();

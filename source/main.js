@@ -755,7 +755,7 @@ function ActivateFail()
     // send score to Game Jolt
     if(GJAPI.bActive) GJAPI.ScoreAdd(21033, g_iScore.toFixed(0), g_iScore.toFixed(0) + " Points (L" + ((g_iLevel >= C_LEVEL_NUM-1) ? "!" : (g_iLevel+1)) + ")", WIND.g_fTotalTime.toFixed(2));
 
-    // implement application restart ("javascript:window.location.reload(false)";)
+    // implement application restart ("javascript:location.reload()";)
     WIND.g_pMenuStart.innerHTML = "<a href='" + (UTILS.asQueryParam.has("restart") ? window.location : (window.location + (window.location.search ? "&" : "?") + "restart=1")) + "'>Restart</a>";
 
     // enable the fail menu (opacity is faded in Move())
