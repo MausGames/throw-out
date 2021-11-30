@@ -750,7 +750,7 @@ function ActivateFail()
     g_iStatus = C_STATUS_FAIL;
 
     // set final score
-    g_pMenuScore.innerHTML = "<p>Thank you for playing!<br /><br />Final Score<br />" + IntToString(g_iScore.toFixed(0), 6) + "</p>";
+    g_pMenuScore.innerHTML = "<p>Thank you for playing!<br><br>Final Score<br>" + IntToString(g_iScore.toFixed(0), 6) + "</p>";
 
     // send score to Game Jolt
     if(GJAPI.bActive) GJAPI.ScoreAdd(21033, g_iScore.toFixed(0), g_iScore.toFixed(0) + " Points (L" + ((g_iLevel >= C_LEVEL_NUM-1) ? "!" : (g_iLevel+1)) + ")", WIND.g_fTotalTime.toFixed(2));

@@ -34,10 +34,6 @@ cShadow.Init = function()
     // pre-calculate scale matrix
     mat4.identity(cShadow.s_vPreScale);
     mat4.scale   (cShadow.s_vPreScale, cShadow.s_vPreScale, C_SHADOW_SCALE);
-
-    // set static stencil-operation parameters (# also WebGL context has to be created with a stencil buffer, may not be present on experimental context)
-    GL.stencilMask(255);
-    GL.clearStencil(128);
 };
 
 
@@ -66,8 +62,8 @@ cShadow.Apply = function()
 
     // set stencil operations to always increment on successful backface writing and
     // decrement on successful frontface writing, combined with depth testing to "map" shadow onto intersecting surfaces
-    GL.stencilOpSeparate(GL.BACK,  GL.KEEP, GL.KEEP, GL.INCR);
-    GL.stencilOpSeparate(GL.FRONT, GL.KEEP, GL.KEEP, GL.DECR);
+    GL.stencilOpSeparate(GL.BACK,  GL.KEEP, GL.KEEP, GL.INCR_WRAP);
+    GL.stencilOpSeparate(GL.FRONT, GL.KEEP, GL.KEEP, GL.DECR_WRAP);
     GL.stencilFunc(GL.ALWAYS, 0, 255);
 
     // enable shadow-object shader-program
@@ -142,7 +138,7 @@ cShadow.Apply = function()
 
     // set stencil operations to draw shadow where the new value is different from its original value (128)
     GL.stencilOp(GL.KEEP, GL.KEEP, GL.KEEP);
-    GL.stencilFunc(GL.NOTEQUAL, 128, 255);
+    GL.stencilFunc(GL.NOTEQUAL, 0, 255);
 
     // enable shadow-overlay shader-program
     cShadow.s_pShaderLayer.Enable();
