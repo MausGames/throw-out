@@ -2,8 +2,8 @@
 //*-----------------------------------------------*//
 //| Part of Throw Out (https://www.maus-games.at) |//
 //*-----------------------------------------------*//
+//| Copyright (c) 2014 Martin Mauersics           |//
 //| Released under the zlib License               |//
-//| More information available in the readme file |//
 //*-----------------------------------------------*//
 /////////////////////////////////////////////////////
 "use strict";
