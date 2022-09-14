@@ -820,5 +820,5 @@ function Signf(fValue)
 // ****************************************************************
 function IntToString(iValue, iSize)
 {
-    return ("000000000" + iValue).substr(-iSize);
+    return ("000000000" + iValue).slice(-iSize);
 }

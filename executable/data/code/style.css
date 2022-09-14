@@ -13,6 +13,10 @@
 }
 
 /* global style */
+:root
+{
+    color-scheme: dark;
+}
 *
 {
     margin: 0;

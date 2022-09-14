@@ -15,16 +15,15 @@ People
 Resources
 
 Music
-- Psychadelik Pedestrian : Catch My Fall (CC BY-NC)
-- Psychadelik Pedestrian : Fifth World (CC BY-NC)
-- Psychadelik Pedestrian : Nocturnia (CC BY-NC)
+- Psychadelik Pedestrian : Catch My Fall : music/Catch_My_Fall.* (CC BY-NC)
+- Psychadelik Pedestrian : Fifth World : music/Fifth_World.* (CC BY-NC)
+- Psychadelik Pedestrian : Nocturnia : music/Nocturnia.* (CC BY-NC)
 
 Sounds
-- altemark : bd01 (CC BY)
+- altemark : bd01 : sounds/bump.wav (CC BY)
 
 Fonts
-- Agustín Bou : SquareFont (freeware)
-- Google : Noto Sans (OFL)
+- Agustín Bou : SquareFont : fonts/square.* (freeware)
 
 
 -------------------------------------------------------------------
