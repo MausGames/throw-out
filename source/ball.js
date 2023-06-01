@@ -110,7 +110,7 @@ cBall.prototype.Move = function()
     // destroy on zero visibility (too far away from plane or fade-out after level was finished)
     if(this.m_fAlpha <= 0.0)
     {
-        if(GJAPI.bActive)
+        if(GJAPI.bLoggedIn)
         {
             // ball lost too fast, add trophy
             if(!InTransition() && (this.m_fLifeTime < 5.0))
@@ -217,7 +217,7 @@ cBall.prototype.Move = function()
                                 g_iScore += fScore;
 
                                 // accumulate negative score
-                                if(GJAPI.bActive)
+                                if(GJAPI.bLoggedIn)
                                 {
                                     // negative score too high, add trophy (only-1-send switch behind function)
                                     if(fScore < 0.0) g_fGameJoltNeg += fScore;

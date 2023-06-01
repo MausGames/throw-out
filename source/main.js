@@ -111,7 +111,7 @@ let g_iActiveMulti = 0;                         // status of displaying the scor
 let g_iActiveTime  = 0;                         // status of displaying the total time
 
 let g_iMessage = 0;                             // message type displayed on the plane (1 = bonus, 2 = time was up, 3 = second chance used)
-let g_fBonus   = 0.0;                           // time bonus of the last level
+let g_iBonus   = 0;                             // time bonus of the last level
 
 let g_fGameJoltNeg = 0.0;                       // negative points accumulated in the current level
 let g_fGameJoltFly = 0.0;                       // time since the last paddle bump
@@ -188,7 +188,7 @@ APP.Init = function()
         g_pBlock[i].UpdateTransform();
 
     // set Game Jolt user string
-    if(GJAPI.bActive) WIND.g_pMenuRight.innerHTML = "<p>Logged in as " + GJAPI.sUserName + "</p>";
+    if(GJAPI.bLoggedIn) WIND.g_pMenuRight.innerHTML = "<p>Logged in as " + GJAPI.sUserName + "</p>";
 
     // set default clear color
     GL.clearColor(0.333, 0.333, 0.333, 1.0);
@@ -248,7 +248,7 @@ APP.Render = function()
     }
     else
     {
-             if(g_iMessage === C_MSG_BONUS)  cPlane.UpdateTextureText("BONUS", g_fBonus.toFixed(0));
+             if(g_iMessage === C_MSG_BONUS)  cPlane.UpdateTextureText("BONUS", g_iBonus.toFixed(0));
         else if(g_iMessage === C_MSG_TIME)   cPlane.UpdateTextureText("TIME UP");
         else if(g_iMessage === C_MSG_CHANCE) cPlane.UpdateTextureText((g_iChances > 0) ? "SECOND" : "LAST", "CHANCE");
     }
@@ -284,7 +284,7 @@ APP.Move = function()
     g_fBlockTime = WIND.g_fTime * Math.max(1.0-g_fFail*2.0, 0.0);
 
     // update session status
-    if(GJAPI.bActive) GJAPI.bSessionActive = (g_iStatus === C_STATUS_GAME);
+    if(GJAPI.bLoggedIn) GJAPI.bSessionActive = (g_iStatus === C_STATUS_GAME);
 
     // update intro
     if(g_iStatus === C_STATUS_INTRO)
@@ -380,7 +380,7 @@ APP.Move = function()
         if((g_fLevelTime >= C_LEVEL_TIME) && (g_iActiveTime === 2))
         {
             // add time out trophy (but not on speed-level)
-            if(GJAPI.bActive && (g_iLevel !== 10)) GJAPI.TrophyAchieve(5741);
+            if(GJAPI.bLoggedIn && (g_iLevel !== 10)) GJAPI.TrophyAchieve(5741);
 
             // finish level
             NextLevel(false);
@@ -435,7 +435,7 @@ APP.Move = function()
             // no ball active and no level transition means player failed (game ends!)
             if(!InTransition())
             {
-                if(GJAPI.bActive && (g_iLevel < 13))   // not on barrier and final level
+                if(GJAPI.bLoggedIn && (g_iLevel < 13))   // not on barrier and final level
                 {
                     // get number of active blocks
                     let iBlocks = 0;
@@ -467,7 +467,7 @@ APP.Move = function()
         if(g_iActiveMulti === 1) g_iActiveMulti = 2;
         g_fStatMulti = (1.0 + Math.max(Math.floor(fNum-1.0), 0.0)*0.5) * (1.0 + Math.max(g_iLevel-2, 0)*0.1);
 
-        if(GJAPI.bActive)
+        if(GJAPI.bLoggedIn)
         {
             // increase paddle-hit time
             const fOldFly = g_fGameJoltFly;
@@ -551,7 +551,7 @@ APP.KeyDown = function(iKey)
 {
     // add hidden trophy
     if(iKey === UTILS.KEY.M)
-        if(GJAPI.bActive && (g_iStatus <= C_STATUS_MAIN)) GJAPI.TrophyAchieve(5739);
+        if(GJAPI.bLoggedIn && (g_iStatus <= C_STATUS_MAIN)) GJAPI.TrophyAchieve(5739);
 
     // toggle camera movement
     if(iKey === UTILS.KEY.C)
@@ -655,7 +655,7 @@ function SetMenuOpacity(iType, fOpacity)
     if(iType === C_MENU_MAIN)
     {
         // set main menu opacity
-        if(GJAPI.bActive) UTILS.SetElementOpacity(g_pMenuJolt, fOpacity);
+        if(GJAPI.bLoggedIn) UTILS.SetElementOpacity(g_pMenuJolt, fOpacity);
         UTILS.SetElementOpacity(WIND.g_pMenuHeader,  fOpacity);
         UTILS.SetElementOpacity(WIND.g_pMenuOption1, fOpacity);
         UTILS.SetElementOpacity(WIND.g_pMenuLeft,    fOpacity);
@@ -753,7 +753,7 @@ function ActivateFail()
     g_pMenuScore.innerHTML = "<p>Thank you for playing!<br><br>Final Score<br>" + IntToString(g_iScore.toFixed(0), 6) + "</p>";
 
     // send score to Game Jolt
-    if(GJAPI.bActive) GJAPI.ScoreAdd(21033, g_iScore.toFixed(0), g_iScore.toFixed(0) + " Points (L" + ((g_iLevel >= C_LEVEL_NUM-1) ? "!" : (g_iLevel+1)) + ")", WIND.g_fTotalTime.toFixed(2));
+    if(GJAPI.bLoggedIn) GJAPI.ScoreAdd(21033, g_iScore.toFixed(0), g_iScore.toFixed(0) + " Points (L" + ((g_iLevel >= C_LEVEL_NUM-1) ? "!" : (g_iLevel+1)) + ")", WIND.g_fTotalTime.toFixed(2));
 
     // implement application restart ("javascript:location.reload()";)
     WIND.g_pMenuStart.innerHTML = "<a href='" + (UTILS.asQueryParam.has("restart") ? window.location : (window.location + (window.location.search ? "&" : "?") + "restart=1")) + "'>Restart</a>";

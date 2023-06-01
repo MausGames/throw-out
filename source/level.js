@@ -89,11 +89,11 @@ function NextLevel(bLoseChance)
         if(g_iActiveTime === 2)
         {
             // calculate time bonus
-            g_fBonus  = Math.floor(1000.0 * UTILS.Clamp((C_LEVEL_TIME-g_fLevelTime)/C_LEVEL_TIME, 0.0, 1.0));
-            g_iScore += g_fBonus;
+            g_iBonus  = UTILS.ToUint(1000.0 * UTILS.Clamp((C_LEVEL_TIME-g_fLevelTime)/C_LEVEL_TIME, 0.0, 1.0));
+            g_iScore += g_iBonus;
 
             // display bonus or time up message
-            g_iMessage = g_fBonus ? C_MSG_BONUS : C_MSG_TIME;
+            g_iMessage = g_iBonus ? C_MSG_BONUS : C_MSG_TIME;
         }
     }
 
@@ -474,8 +474,8 @@ cLevel.s_apFunction[LVL] = function()
         cLevel.s_aiStatus[1] += WIND.g_fTime*3.0;
 
         // check for fixed difference
-        const iOld = Math.floor(cLevel.s_aiStatus[2]) % 4;
-        const iCur = Math.floor(cLevel.s_aiStatus[1]) % 4;
+        const iOld = UTILS.ToUint(cLevel.s_aiStatus[2]) % 4;
+        const iCur = UTILS.ToUint(cLevel.s_aiStatus[1]) % 4;
         if(iOld !== iCur)
         {
             // create beat at 0 and 1 (bump bump calm calm)
@@ -745,7 +745,7 @@ cLevel.s_asText[LVL] = "";
 cLevel.s_apInit[LVL] = function()
 {
     // add progress trophy
-    if(GJAPI.bActive) GJAPI.TrophyAchieve(5780);
+    if(GJAPI.bLoggedIn) GJAPI.TrophyAchieve(5780);
 };
 cLevel.s_apFunction[LVL] = function()
 {
@@ -937,7 +937,7 @@ cLevel.s_apFunction[LVL] = function()
         const fFract    = g_pBlock[i].m_fHealth % 1.0;   // x - floor(x)
         const fFractInv = 1.0-fFract;
         const vColor1   = cLevel.s_aavColor[g_iLevel][Math.floor(g_pBlock[i].m_fHealth)];
-        const vColor2   = cLevel.s_aavColor[g_iLevel][Math.ceil(g_pBlock[i].m_fHealth)];
+        const vColor2   = cLevel.s_aavColor[g_iLevel][Math.ceil (g_pBlock[i].m_fHealth)];
 
         // interpolate new color between both color values
         g_pBlock[i].m_vColor[0] = vColor1[0] * fFractInv + vColor2[0] * fFract;
@@ -1375,7 +1375,7 @@ cLevel.s_apInit[LVL] = function()
         const fFract    = fDist % 1.0;   // x - floor(x)
         const fFractInv = 1.0-fFract;
         const vColor1   = cLevel.s_aavColor[g_iLevel][Math.floor(fDist)];
-        const vColor2   = cLevel.s_aavColor[g_iLevel][Math.ceil(fDist)];
+        const vColor2   = cLevel.s_aavColor[g_iLevel][Math.ceil (fDist)];
 
         // interpolate new color between both color values
         g_pBlock[i].m_vColor[0] = vColor1[0] * fFractInv + vColor2[0] * fFract;
@@ -1420,10 +1420,10 @@ cLevel.s_apFunction[LVL] = function()
     g_pBall[0].m_fSpeed = cLevel.s_aiStatus[0] * (1.0 + g_fLevelTime/C_LEVEL_TIME);
 
     // check current time and update all blocks
-    const fTime = Math.floor(C_LEVEL_TIME-g_fLevelTime);
-    if(cLevel.s_aiStatus[4] !== fTime)
+    const iTime = UTILS.ToUint(C_LEVEL_TIME-g_fLevelTime);
+    if(cLevel.s_aiStatus[4] !== iTime)
     {
-        cLevel.s_aiStatus[4] = fTime;
+        cLevel.s_aiStatus[4] = iTime;
 
         const abOutput = new Array(13);
         const pvColor  = cLevel.s_aavColor[g_iLevel][5];
@@ -1432,7 +1432,7 @@ cLevel.s_apFunction[LVL] = function()
         for(let j = 0; j < 2; ++j)
         {
             // set number and position
-            const iNum = Math.floor(j ? (fTime/10) : (fTime%10));
+            const iNum = UTILS.ToUint(j ? (iTime/10) : (iTime%10));
             const iPos = j ? (6+7*C_LEVEL_X) : (11+7*C_LEVEL_X);
 
             // get bit status
@@ -1442,7 +1442,7 @@ cLevel.s_apFunction[LVL] = function()
             {
                 const iC = i + (i >= 4 ? 1 : 0) + (i >= 9 ? 1 : 0);
                 const iX = iC % 3;
-                const iY = Math.floor(iC / 3);
+                const iY = UTILS.ToUint(iC / 3);
 
                 // get specific block (no status check)
                 const pBlock = g_pBlock[iPos + iX+iY*C_LEVEL_X];
@@ -1976,7 +1976,7 @@ cLevel.s_apExit[LVL] = function()
 // ### GAME JOLT / THE LIONS SONG 0 ###
 LVL = 14;
 
-if(GJAPI.bActive)
+if(GJAPI.bLoggedIn)
 {
 
 cLevel.s_aavColor[LVL] =
@@ -2071,7 +2071,7 @@ cLevel.s_apInit[LVL] = function()
 };
 cLevel.s_apFunction[LVL] = function()
 {
-    if(!GJAPI.bActive)
+    if(!GJAPI.bLoggedIn)
     {
         // center all blocks
         vec2.set(g_vVector, cBlock.s_vSize[0] * 0.5, 0.0);
@@ -2103,7 +2103,7 @@ cLevel.s_apFunction[LVL] = function()
 cLevel.s_apExit[LVL] = function()
 {
     // add final trophy
-    if(GJAPI.bActive) GJAPI.TrophyAchieve(5543);
+    if(GJAPI.bLoggedIn) GJAPI.TrophyAchieve(5543);
 
     // finished the game
     ActivateFail();

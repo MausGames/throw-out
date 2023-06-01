@@ -79,10 +79,10 @@ cPlane.UpdateTextureValues = function(fNewValueTop, fNewValueMiddle, fNewValueBo
 
         // draw values
         TEX.DRAW.fillStyle = "#BBBBBB";
-        if(fNewValueMiddle)      TEX.DRAW.fillText(IntToString(fNewValueMiddle.toFixed(0), 6),                                          cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*2.0);
+        if(fNewValueMiddle)      TEX.DRAW.fillText(IntToString(fNewValueMiddle.toFixed(0), 6),                                            cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*2.0);
         TEX.DRAW.fillStyle = "#DDDDDD";
-        if(fNewValueTop    >= 0) TEX.DRAW.fillText(IntToString(Math.floor(fNewValueTop/60), 2) + ":" + IntToString(fNewValueTop%60, 2), cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*1.0);
-        if(fNewValueBottom >= 0) TEX.DRAW.fillText("x " + fNewValueBottom.toFixed(1),                                                   cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*3.0);
+        if(fNewValueTop    >= 0) TEX.DRAW.fillText(IntToString(UTILS.ToUint(fNewValueTop/60), 2) + ":" + IntToString(fNewValueTop%60, 2), cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*1.0);
+        if(fNewValueBottom >= 0) TEX.DRAW.fillText("x " + fNewValueBottom.toFixed(1),                                                     cPlane.s_vPrePos[0], cPlane.s_vPrePos[1]*3.0);
 
         // update texture
         cPlane.s_pTexture.Modify(TEX);
