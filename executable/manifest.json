@@ -1,0 +1,46 @@
+{
+    "name":             "Throw Out",
+    "short_name":       "Throw Out",
+    "description":      "",
+    "display":          "fullscreen",
+    "orientation":      "landscape",
+    "background_color": "#161616",
+    "theme_color":      "#333336",
+    "lang":             "en",
+    "dir":              "ltr",
+    "start_url":        ".",
+
+    "icons":
+    [
+        {
+            "sizes":   "32x32",
+            "type":    "image/x-icon",
+            "src":     "data/textures/favicon.ico",
+            "purpose": "any maskable"
+        },
+        {
+            "sizes":   "128x128",
+            "type":    "image/png",
+            "src":     "data/textures/favicon-128.png",
+            "purpose": "any maskable"
+        },
+        {
+            "sizes":   "192x192",
+            "type":    "image/png",
+            "src":     "data/textures/favicon-192.png",
+            "purpose": "any maskable"
+        },
+        {
+            "sizes":   "256x256",
+            "type":    "image/png",
+            "src":     "data/textures/favicon-256.png",
+            "purpose": "any maskable"
+        },
+        {
+            "sizes":   "512x512",
+            "type":    "image/png",
+            "src":     "data/textures/favicon-512.png",
+            "purpose": "any maskable"
+        }
+    ]
+}
