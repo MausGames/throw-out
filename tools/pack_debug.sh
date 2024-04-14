@@ -1,3 +1,3 @@
 #!/bin/bash
 
-../../WindEngine/tools/scripts/compile.sh "$PWD/../source/**.js" "$PWD/../executable/data/code/pack.js" debug
+../../WindEngine/tools/scripts/compile_application.sh "$PWD/../source/**.js" "$PWD/../executable/data/code/pack.js" debug
