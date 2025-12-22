@@ -1,5 +1,6 @@
 # Throw Out
 
+[![engine: wind](material/readme/badge_engine.svg)](https://github.com/MausGames/wind-engine)
 [![software license: zlib](material/readme/badge_license_software.svg)](LICENSE.txt)
 [![content license: CC BY](material/readme/badge_license_content.svg)](https://creativecommons.org/licenses/by/4.0/)
 [![credits.txt](material/readme/badge_credits.svg)](executable/data/credits.txt)
@@ -12,16 +13,16 @@ Throw Out is a **browser-based Breakout clone** with fast 3d graphics and a uniq
 > - playable in every modern browser, even on mobile devices and smart TVs
 > - simple but fluid 3d graphics without plugins, fullscreen mode included
 
-#
+## Links
 
 **Browser Version:**  
-<https://gamejolt.com/games/arcade/throw-out/20444/>
+<https://mausgames.itch.io/throw-out>  
+<https://gamejolt.com/games/arcade/throw-out/20444>
 
 **Music:**  
-by Psychadelik Pedestrian (<https://www.toucanmusic.com/albums/toulp5>)  
-Licensed under CC BY-NC (<https://creativecommons.org/licenses/by-nc/3.0/>)
+by [Psychadelik Pedestrian](https://www.toucanmusic.com/albums/toulp5) licensed under [CC BY-NC](https://creativecommons.org/licenses/by-nc/3.0/)
 
-#
+<br>
 
 <table>
     <tr>
