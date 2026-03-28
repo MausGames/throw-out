@@ -26,13 +26,13 @@ by [Psychadelik Pedestrian](https://www.toucanmusic.com/albums/toulp5) licensed 
 
 <table>
     <tr>
-        <td><a href="material/screenshots/to_screen_new_001.jpg?raw=true"><img src="material/screenshots/to_screen_new_001t.jpg"></a></td>
-        <td><a href="material/screenshots/to_screen_new_002.jpg?raw=true"><img src="material/screenshots/to_screen_new_002t.jpg"></a></td>
-        <td><a href="material/screenshots/to_screen_new_003.jpg?raw=true"><img src="material/screenshots/to_screen_new_003t.jpg"></a></td>
+        <td><a href="material/screenshots/to_screen_new_001.jpg"><img src="material/screenshots/to_screen_new_001t.jpg"></a></td>
+        <td><a href="material/screenshots/to_screen_new_002.jpg"><img src="material/screenshots/to_screen_new_002t.jpg"></a></td>
+        <td><a href="material/screenshots/to_screen_new_003.jpg"><img src="material/screenshots/to_screen_new_003t.jpg"></a></td>
     </tr>
     <tr>
-        <td><a href="material/screenshots/to_screen_new_004.jpg?raw=true"><img src="material/screenshots/to_screen_new_004t.jpg"></a></td>
-        <td><a href="material/screenshots/to_screen_new_005.jpg?raw=true"><img src="material/screenshots/to_screen_new_005t.jpg"></a></td>
-        <td><a href="material/screenshots/to_screen_new_008.jpg?raw=true"><img src="material/screenshots/to_screen_new_008t.jpg"></a></td>
+        <td><a href="material/screenshots/to_screen_new_004.jpg"><img src="material/screenshots/to_screen_new_004t.jpg"></a></td>
+        <td><a href="material/screenshots/to_screen_new_005.jpg"><img src="material/screenshots/to_screen_new_005t.jpg"></a></td>
+        <td><a href="material/screenshots/to_screen_new_008.jpg"><img src="material/screenshots/to_screen_new_008t.jpg"></a></td>
     </tr>
 </table>
