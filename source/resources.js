@@ -22,8 +22,9 @@ RES.cBackground.s_sVertexShader =
 "}";
 
 RES.cBackground.s_sFragmentShader =
-"uniform float u_v1Alpha;"                                                     +
-"varying vec2  v_v2Relative;"                                                  +
+"uniform mediump float u_v1Alpha;"                                             +
+""                                                                             +
+"varying vec2 v_v2Relative;"                                                   +
 ""                                                                             +
 "void main()"                                                                  +
 "{"                                                                            +
@@ -215,9 +216,10 @@ RES.cBall.s_sVertexShader =
 "}";
 
 RES.cBall.s_sFragmentShader =
-"uniform float u_v1Alpha;"                                                      +
-"varying vec3  v_v3Relative;"                                                   +
-"varying vec3  v_v3Normal;"                                                     +
+"uniform mediump float u_v1Alpha;"                                              +
+""                                                                              +
+"varying vec3 v_v3Relative;"                                                    +
+"varying vec3 v_v3Normal;"                                                      +
 ""                                                                              +
 "void main()"                                                                   +
 "{"                                                                             +
@@ -407,7 +409,8 @@ RES.cBlock.s_aiIndexDataLow =
 [4, 6, 8, 6, 7, 8, 7, 5, 8, 5, 4, 8, 1, 0, 5, 5, 0, 4, 0, 2, 4, 4, 2, 6, 2, 3, 6, 6, 3, 7, 3, 1, 7, 7, 1, 5, 1, 3, 0, 0, 3, 2];
 
 RES.cBlock.s_sVertexShader =
-"uniform mat3 u_m3Normal;"                                            +
+"uniform mediump mat3 u_m3Normal;"                                    +
+""                                                                    +
 "varying vec3 v_v3Relative;"                                          +
 "varying vec3 v_v3Normal;"                                            +
 "varying vec3 v_v3NormalTrue;"                                        +
@@ -422,9 +425,8 @@ RES.cBlock.s_sVertexShader =
 "}";
 
 RES.cBlock.s_sFragmentShader =
-"precision lowp int;"                                                                                             +
+"uniform lowp int u_iType;"                                                                                       +
 ""                                                                                                                +
-"uniform int  u_iType;"                                                                                           +
 "varying vec3 v_v3Relative;"                                                                                      +
 "varying vec3 v_v3Normal;"                                                                                        +
 "varying vec3 v_v3NormalTrue;"                                                                                    +
@@ -690,10 +692,11 @@ RES.cPaddle.s_aiIndexDataLow =
 [4, 6, 5, 5, 6, 7, 1, 0, 5, 5, 0, 4, 0, 2, 4, 4, 2, 6, 2, 3, 6, 6, 3, 7, 3, 1, 7, 7, 1, 5, 1, 3, 0, 0, 3, 2];
 
 RES.cPaddle.s_sVertexShader =
-"uniform float u_v1Length;"                                                        +
-"uniform float u_v1LengthDiv;"                                                     +
-"varying vec3  v_v3Relative;"                                                      +
-"varying vec3  v_v3Normal;"                                                        +
+"uniform mediump float u_v1Length;"                                                +
+"uniform mediump float u_v1LengthDiv;"                                             +
+""                                                                                 +
+"varying vec3 v_v3Relative;"                                                       +
+"varying vec3 v_v3Normal;"                                                         +
 ""                                                                                 +
 "void main()"                                                                      +
 "{"                                                                                +
@@ -707,7 +710,8 @@ RES.cPaddle.s_sVertexShader =
 "}";
 
 RES.cPaddle.s_sFragmentShader =
-"uniform vec3 u_v3Color;"                                                           +
+"uniform mediump vec3 u_v3Color;"                                                   +
+""                                                                                  +
 "varying vec3 v_v3Relative;"                                                        +
 "varying vec3 v_v3Normal;"                                                          +
 ""                                                                                  +
@@ -751,10 +755,11 @@ RES.cPlane.s_sVertexShader =
 "}";
 
 RES.cPlane.s_sFragmentShader =
-"uniform sampler2D u_s2Texture;"                                                          +
-"varying vec3      v_v3Relative;"                                                         +
-"varying vec2      v_v2Border;"                                                           +
-"varying vec2      v_v2TexCoord;"                                                         +
+"uniform mediump sampler2D u_s2Texture;"                                                  +
+""                                                                                        +
+"varying vec3 v_v3Relative;"                                                              +
+"varying vec2 v_v2Border;"                                                                +
+"varying vec2 v_v2TexCoord;"                                                              +
 ""                                                                                        +
 "void main()"                                                                             +
 "{"                                                                                       +
@@ -778,7 +783,8 @@ RES.cPlane.s_sFragmentShader =
 // ****************************************************************
 RES.cShadow = {};
 RES.cShadow.s_sVertexShaderObject =   // #OBJECT
-"uniform mat3  u_m3Normal;"                                      +
+"uniform mediump mat3 u_m3Normal;"                               +
+""                                                               +
 "varying float v_v1Height;"                                      +
 ""                                                               +
 "void main()"                                                    +
