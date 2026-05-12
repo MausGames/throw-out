@@ -81,6 +81,7 @@ let g_pMenuJolt    = null;
 let g_pMenuWarning = null;
 let g_pMenuLevel   = null;
 let g_pMenuScore   = null;
+let g_pMenuCamera  = null;
 
 let g_pSoundBump    = null;                     // simple bump sound effect
 let g_iMusicCurrent = 2;                        // current music file (Math.floor(Math.random()*2.999);)
@@ -137,6 +138,14 @@ APP.Init = function()
     g_pMenuWarning = document.getElementById("warning");
     g_pMenuLevel   = document.getElementById("text-level");
     g_pMenuScore   = document.getElementById("text-score");
+    g_pMenuCamera  = document.getElementById("camera");
+
+    // implement camera toggle button
+    g_pMenuCamera.addEventListener("mousedown", function()
+    {
+        g_bCamActive = !g_bCamActive;
+        this.style.color = g_bCamActive ? "" : "#444444";
+    });
 
     // load sound file
     g_pSoundBump = new windSound().Load("data/sounds/bump.wav");
@@ -555,7 +564,10 @@ APP.KeyDown = function(iKey)
 
     // toggle camera movement
     if(iKey === UTILS.KEY.C)
+    {
         g_bCamActive = !g_bCamActive;
+        g_pMenuCamera.style.color = g_bCamActive ? "" : "#444444";
+    }
 
     // pause game
     if(iKey === UTILS.KEY.ENTER || iKey === UTILS.KEY.SPACE)
