@@ -28,7 +28,7 @@
 
         <link rel="stylesheet" href="data/code/style.css">
 
-        <script src="data/code/pack.js"></script>
+        <script src="data/code/pack.js" async></script>
 
     </head>
 
@@ -40,12 +40,12 @@
         </noscript>
 
         <!-- Main Canvas -->
-        <canvas id="canvas" width="800" height="600" style="margin: auto; display: block;">
+        <canvas id="canvas" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; overflow: hidden; z-index: -1;">
             <p>Your browser does not support HTML5.</p>
         </canvas>
 
         <!-- Texture Canvas -->
-        <canvas id="texture" width="256" height="256" style="margin: auto; display: none;"></canvas>
+        <canvas id="texture" style="display: none;"></canvas>
 
         <!-- Audio Stream -->
         <audio id="stream" preload="auto">
@@ -54,8 +54,12 @@
         </audio>
 
         <!-- Images -->
-        <img id="logo" src="data/textures/maus_logo.png" alt="Maus Games" style="opacity: 0.0; position: absolute; left: 48%; top: 35%; height: 24%;">
         <img id="jolt" src="data/textures/gamejolt_jolt.png" alt="Game Jolt" style="opacity: 0.0; position: absolute; right: 1.5%; bottom: 3.5%; height: 6%;">
+
+        <!-- Intro Message -->
+        <div id="logo" class="middle" style="font-size: 2.8em; top: 46.0%;">
+            <p class="header">A Game by Martin Mauersics</p>
+        </div>
 
         <!-- Game Title -->
         <div id="text-header" class="middle" style="font-size: 5.1em; top: 26.2%;">

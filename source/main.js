@@ -222,7 +222,6 @@ APP.Render = function()
 {
     // render background
     if(WIND.g_bOptionQuality) g_pBackground.Render();
-    else GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT);
 
     if(g_iStatus === C_STATUS_GAME)
     {

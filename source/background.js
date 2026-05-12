@@ -46,15 +46,10 @@ cBackground.prototype.Render = function()
     // update all object uniforms
     cBackground.s_pShader.SendUniformFloat("u_v1Alpha", this.m_fAlpha);
 
-    // clear framebuffer and set alpha blending
+    // set alpha blending
     if(this.m_fAlpha >= 1.0)
     {
         GL.disable(GL.BLEND);
-        GL.clear(GL.DEPTH_BUFFER_BIT | GL.STENCIL_BUFFER_BIT);
-    }
-    else
-    {
-        GL.clear(GL.COLOR_BUFFER_BIT | GL.DEPTH_BUFFER_BIT | GL.STENCIL_BUFFER_BIT);
     }
 
     // draw the model (from plane)

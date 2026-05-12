@@ -4,6 +4,7 @@
     font-family: 'square';
     font-weight: normal;
     font-style: normal;
+    font-display: swap;
     src: url('../fonts/square.woff2') format('woff2'),
          url('../fonts/square.woff') format('woff'),
          url('../fonts/square.ttf') format('truetype');
